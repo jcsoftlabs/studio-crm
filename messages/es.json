@@ -37,7 +37,19 @@
       "4": "Jueves",
       "5": "Viernes",
       "6": "Sábado"
-    }
+    },
+    "back": "Volver",
+    "add": "Añadir",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "confirm": "Confirmar",
+    "confirmDelete": "¿Eliminar definitivamente de la lista?",
+    "optional": "opcional",
+    "none": "Ninguno",
+    "close": "Cerrar",
+    "results": "{count, plural, =0 {Ningún resultado} one {1 resultado} other {# resultados}}",
+    "active": "Activo",
+    "inactive": "Inactivo"
   },
   "auth": {
     "loginTitle": "Iniciar sesión",
@@ -100,14 +112,119 @@
       "usdRate": "No se convierte nada automáticamente; solo se muestra."
     }
   },
-  "clients": { "title": "Clientas" },
-  "agenda": { "title": "Citas" },
-  "services": { "title": "Servicios" },
-  "staff": { "title": "Empleadas" },
-  "caisse": { "title": "Caja" },
-  "stock": { "title": "Inventario" },
-  "fidelite": { "title": "Fidelidad" },
-  "rapports": { "title": "Informes" },
+  "clients": {
+    "title": "Clientas",
+    "subtitle": "Ficha, historial y fotos de cada clienta.",
+    "searchPlaceholder": "Buscar por nombre o teléfono",
+    "new": "Nueva clienta",
+    "newSubtitle": "El nombre y el teléfono bastan, el resto se completa después.",
+    "import": {
+      "title": "Importar clientas",
+      "subtitle": "Un archivo CSV exportado de tus contactos o de Excel.",
+      "chooseFile": "Elegir un archivo",
+      "rowsDetected": "{count} filas detectadas",
+      "mapping": "Asocia las columnas",
+      "ignore": "No importar",
+      "preview": "Vista previa",
+      "run": "Importar",
+      "running": "Importando…",
+      "done": "{imported} clientas importadas, {skipped} filas ignoradas.",
+      "skippedReason": "Filas ignoradas por falta de nombre o de teléfono.",
+      "firstNameRequired": "Hay que asociar al menos la columna del nombre."
+    },
+    "empty": "Aún no hay clientas. Crea la primera o importa tu lista.",
+    "noResults": "Ninguna clienta coincide con la búsqueda.",
+    "duplicateWarning": "Ya existe una clienta con este teléfono: {name}. Puedes continuar de todos modos.",
+    "whatsapp": "Escribir por WhatsApp",
+    "noPhone": "Sin teléfono",
+    "deleted": "Eliminada",
+    "delete": "Eliminar de la lista",
+    "restore": "Restaurar",
+    "createdOn": "Registrada el {date}",
+    "fields": {
+      "firstName": "Nombre",
+      "lastName": "Apellido",
+      "phone": "Teléfono / WhatsApp",
+      "email": "Correo electrónico",
+      "birthDate": "Cumpleaños",
+      "notes": "Notas",
+      "allergies": "Alergias",
+      "preferences": "Preferencias"
+    },
+    "hints": {
+      "allergies": "Se muestra en rojo en la ficha y antes de cada servicio.",
+      "preferences": "Color favorito, largo, productos que evita…"
+    },
+    "sections": {
+      "contact": "Contacto",
+      "care": "Cuidados",
+      "photos": "Fotos antes / después"
+    },
+    "photos": {
+      "before": "Antes",
+      "after": "Después",
+      "add": "Añadir foto",
+      "empty": "Todavía no hay fotos.",
+      "delete": "Eliminar la foto",
+      "uploading": "Subiendo…"
+    },
+    "importCta": "Importar CSV"
+  },
+  "agenda": {
+    "title": "Citas"
+  },
+  "services": {
+    "title": "Servicios",
+    "subtitle": "Catálogo de servicios, categorías y paquetes.",
+    "categories": {
+      "title": "Categorías",
+      "new": "Nueva categoría",
+      "empty": "Crea una categoría para empezar el catálogo.",
+      "moveUp": "Subir",
+      "moveDown": "Bajar"
+    },
+    "items": {
+      "new": "Nuevo servicio",
+      "empty": "Ningún servicio en esta categoría."
+    },
+    "packages": {
+      "title": "Paquetes",
+      "new": "Nuevo paquete",
+      "empty": "Ningún paquete todavía.",
+      "summary": "{sessions} sesiones · válido {days} días"
+    },
+    "fields": {
+      "nameEs": "Nombre en español",
+      "nameFr": "Nombre en francés",
+      "category": "Categoría",
+      "durationMin": "Duración (min)",
+      "price": "Precio",
+      "commissionRate": "Comisión (%)",
+      "active": "Activo",
+      "sessionsTotal": "Número de sesiones",
+      "validityDays": "Validez (días)"
+    },
+    "hints": {
+      "commissionRate": "Vacío = se usa la comisión de la empleada, luego la de Ajustes.",
+      "nameFr": "La propietaria trabaja en francés; el equipo, en español."
+    },
+    "duration": "{count} min"
+  },
+  "staff": {
+    "title": "Empleadas"
+  },
+  "caisse": {
+    "title": "Caja"
+  },
+  "stock": {
+    "title": "Inventario"
+  },
+  "fidelite": {
+    "title": "Fidelidad"
+  },
+  "rapports": {
+    "title": "Informes"
+  },
   "errors": {
     "generic": "Algo salió mal. Inténtalo de nuevo.",
     "forbidden": "No tienes permiso para esta acción.",
@@ -115,6 +232,13 @@
     "required": "Campo obligatorio",
     "invalidNumber": "Número no válido",
     "invalidTime": "Hora no válida (HH:MM)",
-    "closeBeforeOpen": "El cierre debe ser posterior a la apertura"
+    "closeBeforeOpen": "El cierre debe ser posterior a la apertura",
+    "invalidFile": "Archivo no válido.",
+    "fileTooLarge": "El archivo supera {max} MB.",
+    "invalidImage": "Solo se aceptan imágenes JPEG, PNG o WebP.",
+    "nameRequired": "El nombre es obligatorio.",
+    "categoryRequired": "Elige una categoría.",
+    "hasServices": "La categoría todavía tiene servicios.",
+    "invalidDate": "Fecha no válida."
   }
 }

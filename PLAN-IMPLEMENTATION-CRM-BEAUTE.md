@@ -185,13 +185,36 @@ Postgres, `AuditLog` `SETTINGS_UPDATE` créé), rendu mobile 375 px avec barre b
 - `next lint` est déprécié en Next 15 ; migration vers l'ESLint CLI à faire avant Next 16.
 - Une seule base pour dev et prod tant que la production n'est pas ouverte.
 
-### Phase 1 — Clientes et catalogue (1 semaine)
-- CRUD Client : liste avec recherche (nom, téléphone), fiche détaillée, notes, allergies,
-  préférences, anniversaire.
-- Upload et affichage des photos avant/après (stockage S3-compatible ou disque local).
-- CRUD ServiceCategory, Service, Package.
-- Import CSV des clientes existantes (elle a probablement un carnet ou un Excel — prévoir un
-  mapping de colonnes tolérant).
+### Phase 1 — Clientes et catalogue (1 semaine) — ✅ **livrée le 2026-08-30**
+- [x] CRUD Client : liste avec recherche (nom, téléphone), fiche détaillée, notes, allergies,
+      préférences, anniversaire. Recherche insensible aux accents et au format du numéro via
+      deux colonnes dérivées (`searchName`, `phoneDigits`), maintenues à l'écriture.
+- [x] Upload et affichage des photos avant/après. **Vercel Blob** en production, repli sur le
+      disque quand `BLOB_READ_WRITE_TOKEN` est absent (poste de dev).
+- [x] CRUD ServiceCategory, Service, Package, avec réordonnancement des catégories.
+- [x] Import CSV : détection du séparateur (`,` `;` tabulation), BOM, guillemets, mapping des
+      colonnes deviné puis corrigeable, aperçu avant écriture, dates JJ/MM/AAAA et AAAA-MM-JJ.
+- [x] Seed §8 : 20 clientes, 15 services en 4 catégories, 2 forfaits.
+
+**Vérifié en conditions réelles** : recherche « peña » et « pena » renvoient la même cliente,
+recherche « 849 » renvoie les 6 numéros correspondants ; avertissement de doublon sur un numéro
+déjà pris puis création forcée ; import d'un CSV `;` avec accents, champ entre guillemets
+contenant une virgule et ligne vide → 3 clientes créées, ligne vide ignorée, `14/02/1992` lu comme
+le 14 février ; envoi puis suppression d'une photo.
+
+**Écarts actés en phase 1** :
+- `Client.lastName` est **optionnel** (le §4 le donnait obligatoire) : une cliente de passage se
+  saisit avec un prénom et un numéro, sinon rien n'est saisi.
+- `Client.phone` n'est **pas `UNIQUE`** mais indexé, avec avertissement de doublon à la création :
+  une mère et sa fille partagent un numéro, un blocage dur ferait perdre des saisies.
+- `Service.commissionRate` devient `commissionRateBp` (points de base), comme le reste des taux.
+- `ClientPackage` n'est **pas** créé : il appartient à la phase 5 (fidélité).
+- Écriture du catalogue réservée à `OWNER` (il porte les prix) ; `RECEPTION` le consulte.
+- La restriction §3.2 « la styliste ne voit que les clientes qu'elle sert » n'est **pas encore
+  applicable** : elle dépend des rendez-vous. À implémenter en phase 2.
+- `src/lib/form-echo.ts` : React 19 vide les champs non contrôlés après une action de formulaire.
+  Sans cet écho, la saisie était perdue au moindre retour en erreur — l'avertissement de doublon
+  était inutilisable. Appliqué aussi au formulaire des Paramètres (phase 0).
 
 ### Phase 2 — Agenda (1,5 semaine) — cœur du produit
 - Vue jour et semaine, colonnes par employée, code couleur par employée.

@@ -106,3 +106,103 @@ model AuditLog {
   @@index([entity, entityId])
   @@index([createdAt])
 }
+
+enum PhotoType {
+  BEFORE
+  AFTER
+}
+
+model Client {
+  id        String    @id @default(cuid())
+  firstName String
+  /// Optionnel : une cliente de passage se saisit avec un prénom et un numéro.
+  lastName  String    @default("")
+  phone     String    @default("")
+  email     String?
+  birthDate DateTime?
+
+  notes       String @default("")
+  allergies   String @default("")
+  preferences String @default("")
+
+  /// Colonnes dérivées, maintenues à l'écriture : recherche sans accent ni format.
+  searchName  String @default("")
+  phoneDigits String @default("")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  photos ClientPhoto[]
+
+  @@index([searchName])
+  @@index([phoneDigits])
+  @@index([deletedAt])
+}
+
+model ClientPhoto {
+  id       String @id @default(cuid())
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId String
+
+  url        String
+  storageKey String
+  type       PhotoType
+  /// Renseigné à partir de la phase 2 (agenda).
+  appointmentId String?
+  takenAt    DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  @@index([clientId, takenAt])
+}
+
+model ServiceCategory {
+  id     String @id @default(cuid())
+  nameEs String
+  nameFr String
+  order  Int    @default(0)
+  active Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  services Service[]
+
+  @@index([order])
+}
+
+model Service {
+  id         String          @id @default(cuid())
+  category   ServiceCategory @relation(fields: [categoryId], references: [id])
+  categoryId String
+
+  nameEs      String
+  nameFr      String
+  durationMin Int
+  priceCents  Int
+  /// Points de base ; null = on retombe sur le taux de l'employée puis sur celui des Paramètres.
+  commissionRateBp Int?
+  order       Int     @default(0)
+  active      Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([categoryId, order])
+}
+
+model Package {
+  id            String  @id @default(cuid())
+  nameEs        String
+  nameFr        String
+  priceCents    Int
+  sessionsTotal Int
+  validityDays  Int
+  active        Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+}

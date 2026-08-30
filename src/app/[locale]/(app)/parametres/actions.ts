@@ -8,8 +8,14 @@ import { ForbiddenError, requireRole } from '@/lib/permissions';
 import { SETTINGS_ID } from '@/lib/settings';
 import { hhmmToMinutes } from '@/lib/dates';
 import { parseMoneyToCents, parseRateToBp } from '@/lib/money';
+import { echoForm, type FormEcho } from '@/lib/form-echo';
 
-export type SettingsState = { ok?: boolean; error?: string; fieldErrors?: Record<string, string> };
+export type SettingsState = {
+  ok?: boolean;
+  error?: string;
+  fieldErrors?: Record<string, string>;
+  echo?: FormEcho;
+};
 
 const text = z.string().trim().max(200);
 
@@ -47,15 +53,17 @@ function intField(formData: FormData, key: string, fallback: number) {
 }
 
 export async function updateStudioSettings(
-  _prev: SettingsState,
+  prev: SettingsState,
   formData: FormData,
 ): Promise<SettingsState> {
+  const echo = echoForm(prev.echo, formData);
+
   let userId: string;
   try {
     const user = await requireRole(Role.OWNER);
     userId = user.id;
   } catch (error) {
-    if (error instanceof ForbiddenError) return { error: 'forbidden' };
+    if (error instanceof ForbiddenError) return { error: 'forbidden', echo };
     throw error;
   }
 
@@ -92,7 +100,7 @@ export async function updateStudioSettings(
       const key = issue.path[0];
       if (typeof key === 'string' && !fieldErrors[key]) fieldErrors[key] = 'invalid';
     }
-    return { error: 'generic', fieldErrors };
+    return { error: 'generic', fieldErrors, echo };
   }
 
   const hours: { weekday: number; closed: boolean; openMinute: number; closeMinute: number }[] = [];
@@ -100,8 +108,8 @@ export async function updateStudioSettings(
     const closed = formData.get(`closed-${weekday}`) === 'on';
     const openMinute = hhmmToMinutes(String(formData.get(`open-${weekday}`) ?? ''));
     const closeMinute = hhmmToMinutes(String(formData.get(`close-${weekday}`) ?? ''));
-    if (openMinute === null || closeMinute === null) return { error: 'invalidTime' };
-    if (!closed && closeMinute <= openMinute) return { error: 'closeBeforeOpen' };
+    if (openMinute === null || closeMinute === null) return { error: 'invalidTime', echo };
+    if (!closed && closeMinute <= openMinute) return { error: 'closeBeforeOpen', echo };
     hours.push({ weekday, closed, openMinute, closeMinute });
   }
 

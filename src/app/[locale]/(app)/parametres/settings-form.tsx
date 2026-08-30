@@ -47,21 +47,25 @@ export function SettingsForm({ settings }: { settings: StudioSettingsWithHours }
   );
 
   const f = (key: string) => t(`fields.${key}` as FieldKey);
+  // Après une erreur, React a vidé les champs : on rejoue la saisie renvoyée par l'action.
+  const echo = state.echo?.values;
+  const dv = (name: string, fallback: string) => echo?.[name] ?? fallback;
 
   return (
     <form action={action} className="flex flex-col gap-5">
+      <div key={state.echo?.nonce ?? 0} className="flex flex-col gap-5">
       <Card>
         <CardHeader>
           <CardTitle>{t('sections.identity')}</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
-          <Field name="name" label={f('name')} defaultValue={settings.name} />
-          <Field name="legalName" label={f('legalName')} defaultValue={settings.legalName} />
-          <Field name="rnc" label={f('rnc')} defaultValue={settings.rnc} hint={t('hints.rnc')} />
-          <Field name="logoUrl" label={f('logoUrl')} type="url" defaultValue={settings.logoUrl ?? ''} />
-          <Field name="address" label={f('address')} defaultValue={settings.address} className="sm:col-span-2" />
-          <Field name="city" label={f('city')} defaultValue={settings.city} />
-          <Field name="province" label={f('province')} defaultValue={settings.province} />
+          <Field name="name" label={f('name')} defaultValue={dv('name', settings.name)} />
+          <Field name="legalName" label={f('legalName')} defaultValue={dv('legalName', settings.legalName)} />
+          <Field name="rnc" label={f('rnc')} defaultValue={dv('rnc', settings.rnc)} hint={t('hints.rnc')} />
+          <Field name="logoUrl" label={f('logoUrl')} type="url" defaultValue={dv('logoUrl', settings.logoUrl ?? '')} />
+          <Field name="address" label={f('address')} defaultValue={dv('address', settings.address)} className="sm:col-span-2" />
+          <Field name="city" label={f('city')} defaultValue={dv('city', settings.city)} />
+          <Field name="province" label={f('province')} defaultValue={dv('province', settings.province)} />
         </CardContent>
       </Card>
 
@@ -70,10 +74,10 @@ export function SettingsForm({ settings }: { settings: StudioSettingsWithHours }
           <CardTitle>{t('sections.contact')}</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
-          <Field name="phone" label={f('phone')} type="tel" defaultValue={settings.phone} />
-          <Field name="whatsapp" label={f('whatsapp')} type="tel" defaultValue={settings.whatsapp} />
-          <Field name="email" label={f('email')} type="email" defaultValue={settings.email} />
-          <Field name="website" label={f('website')} defaultValue={settings.website} />
+          <Field name="phone" label={f('phone')} type="tel" defaultValue={dv('phone', settings.phone)} />
+          <Field name="whatsapp" label={f('whatsapp')} type="tel" defaultValue={dv('whatsapp', settings.whatsapp)} />
+          <Field name="email" label={f('email')} type="email" defaultValue={dv('email', settings.email)} />
+          <Field name="website" label={f('website')} defaultValue={dv('website', settings.website)} />
         </CardContent>
       </Card>
 
@@ -86,16 +90,16 @@ export function SettingsForm({ settings }: { settings: StudioSettingsWithHours }
             name="itbisRate"
             label={f('itbisRate')}
             inputMode="decimal"
-            defaultValue={formatRateBp(settings.itbisRateBp, locale)}
+            defaultValue={dv('itbisRate', formatRateBp(settings.itbisRateBp, locale))}
             hint={t('hints.itbisRate')}
           />
           <Field
             name="defaultCommissionRate"
             label={f('defaultCommissionRate')}
             inputMode="decimal"
-            defaultValue={formatRateBp(settings.defaultCommissionRateBp, locale)}
+            defaultValue={dv('defaultCommissionRate', formatRateBp(settings.defaultCommissionRateBp, locale))}
           />
-          <Field name="currencySymbol" label={f('currencySymbol')} defaultValue={settings.currencySymbol} />
+          <Field name="currencySymbol" label={f('currencySymbol')} defaultValue={dv('currencySymbol', settings.currencySymbol)} />
           <div className="flex items-center gap-3 self-end pb-2">
             <Switch id="showUsd" name="showUsd" checked={showUsd} onCheckedChange={setShowUsd} />
             <Label htmlFor="showUsd">{f('showUsd')}</Label>
@@ -105,7 +109,7 @@ export function SettingsForm({ settings }: { settings: StudioSettingsWithHours }
               name="usdRate"
               label={f('usdRate')}
               inputMode="decimal"
-              defaultValue={settings.usdRateCents ? (settings.usdRateCents / 100).toString() : ''}
+              defaultValue={dv('usdRate', settings.usdRateCents ? (settings.usdRateCents / 100).toString() : '')}
               hint={t('hints.usdRate')}
             />
           ) : null}
@@ -113,30 +117,30 @@ export function SettingsForm({ settings }: { settings: StudioSettingsWithHours }
             name="printerWidthMm"
             label={f('printerWidthMm')}
             inputMode="numeric"
-            defaultValue={String(settings.printerWidthMm)}
+            defaultValue={dv('printerWidthMm', String(settings.printerWidthMm))}
             hint={t('hints.printerWidthMm')}
           />
           <Field
             name="ncfLowThreshold"
             label={f('ncfLowThreshold')}
             inputMode="numeric"
-            defaultValue={String(settings.ncfLowThreshold)}
+            defaultValue={dv('ncfLowThreshold', String(settings.ncfLowThreshold))}
           />
           <Field
             name="ncfExpiryWarningDays"
             label={f('ncfExpiryWarningDays')}
             inputMode="numeric"
-            defaultValue={String(settings.ncfExpiryWarningDays)}
+            defaultValue={dv('ncfExpiryWarningDays', String(settings.ncfExpiryWarningDays))}
           />
           <Field
             name="invoiceFooterEs"
             label={`${f('invoiceFooter')} (ES)`}
-            defaultValue={settings.invoiceFooterEs}
+            defaultValue={dv('invoiceFooterEs', settings.invoiceFooterEs)}
           />
           <Field
             name="invoiceFooterFr"
             label={`${f('invoiceFooter')} (FR)`}
-            defaultValue={settings.invoiceFooterFr}
+            defaultValue={dv('invoiceFooterFr', settings.invoiceFooterFr)}
           />
         </CardContent>
       </Card>
@@ -168,7 +172,7 @@ export function SettingsForm({ settings }: { settings: StudioSettingsWithHours }
                     name={`open-${h.weekday}`}
                     type="time"
                     disabled={closed}
-                    defaultValue={minutesToHHmm(h.openMinute)}
+                    defaultValue={dv(`open-${h.weekday}`, minutesToHHmm(h.openMinute))}
                     className="w-32"
                   />
                   <span aria-hidden>–</span>
@@ -177,7 +181,7 @@ export function SettingsForm({ settings }: { settings: StudioSettingsWithHours }
                     name={`close-${h.weekday}`}
                     type="time"
                     disabled={closed}
-                    defaultValue={minutesToHHmm(h.closeMinute)}
+                    defaultValue={dv(`close-${h.weekday}`, minutesToHHmm(h.closeMinute))}
                     className="w-32"
                   />
                 </div>
@@ -203,16 +207,18 @@ export function SettingsForm({ settings }: { settings: StudioSettingsWithHours }
             <select
               id="defaultLocale"
               name="defaultLocale"
-              defaultValue={settings.defaultLocale}
+              defaultValue={dv('defaultLocale', settings.defaultLocale)}
               className="h-10 rounded-md border border-input bg-card px-3 text-sm"
             >
               <option value="es">{tc('spanish')}</option>
               <option value="fr">{tc('french')}</option>
             </select>
           </div>
-          <Field name="timezone" label={f('timezone')} defaultValue={settings.timezone} />
+          <Field name="timezone" label={f('timezone')} defaultValue={dv('timezone', settings.timezone)} />
         </CardContent>
       </Card>
+
+      </div>
 
       <div className="sticky bottom-20 flex items-center gap-3 md:bottom-4">
         <Button type="submit" size="lg" disabled={pending}>
