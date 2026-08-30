@@ -31,6 +31,7 @@ model User {
   deletedAt    DateTime?
 
   auditLogs AuditLog[]
+  employee  Employee?
 
   @@index([deletedAt])
 }
@@ -133,7 +134,9 @@ model Client {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  photos ClientPhoto[]
+  photos       ClientPhoto[]
+  appointments Appointment[]
+  waitlist     WaitlistEntry[]
 
   @@index([searchName])
   @@index([phoneDigits])
@@ -190,6 +193,9 @@ model Service {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
+  appointmentItems AppointmentItem[]
+  waitlist         WaitlistEntry[]
+
   @@index([categoryId, order])
 }
 
@@ -205,4 +211,133 @@ model Package {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+}
+
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  DONE
+  NO_SHOW
+  CANCELLED
+}
+
+enum AppointmentSource {
+  WALK_IN
+  PHONE
+  ONLINE
+}
+
+model Employee {
+  id     String  @id @default(cuid())
+  user   User?   @relation(fields: [userId], references: [id])
+  userId String? @unique
+
+  name   String
+  phone  String  @default("")
+  /// Couleur de la colonne et des blocs dans l'agenda.
+  color  String  @default("#c084fc")
+  active Boolean @default(true)
+  order  Int     @default(0)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  schedules        EmployeeSchedule[]
+  timeOff          TimeOff[]
+  appointments     Appointment[]
+  appointmentItems AppointmentItem[]
+  waitlist         WaitlistEntry[]
+
+  @@index([deletedAt, order])
+}
+
+model EmployeeSchedule {
+  id         String   @id @default(cuid())
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId String
+
+  /// 0 = dimanche … 6 = samedi
+  weekday     Int
+  closed      Boolean @default(false)
+  openMinute  Int     @default(540)
+  closeMinute Int     @default(1080)
+
+  @@unique([employeeId, weekday])
+}
+
+model TimeOff {
+  id         String   @id @default(cuid())
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId String
+
+  startAt DateTime
+  endAt   DateTime
+  reason  String   @default("")
+
+  createdAt DateTime @default(now())
+
+  @@index([employeeId, startAt])
+}
+
+model Appointment {
+  id         String   @id @default(cuid())
+  client     Client   @relation(fields: [clientId], references: [id])
+  clientId   String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  employeeId String
+
+  startAt DateTime
+  endAt   DateTime
+  status  AppointmentStatus @default(SCHEDULED)
+  source  AppointmentSource @default(WALK_IN)
+  notes   String            @default("")
+
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items AppointmentItem[]
+
+  @@index([employeeId, startAt])
+  @@index([startAt])
+  @@index([clientId, startAt])
+}
+
+model AppointmentItem {
+  id            String      @id @default(cuid())
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  appointmentId String
+  service       Service     @relation(fields: [serviceId], references: [id])
+  serviceId     String
+  employee      Employee    @relation(fields: [employeeId], references: [id])
+  employeeId    String
+
+  /// Repris du service à la création, puis modifiables sur le rendez-vous.
+  priceCents  Int
+  durationMin Int
+  order       Int @default(0)
+
+  @@index([appointmentId, order])
+}
+
+model WaitlistEntry {
+  id         String    @id @default(cuid())
+  client     Client    @relation(fields: [clientId], references: [id])
+  clientId   String
+  service    Service?  @relation(fields: [serviceId], references: [id])
+  serviceId  String?
+  employee   Employee? @relation(fields: [employeeId], references: [id])
+  employeeId String?
+
+  note          String    @default("")
+  preferredFrom DateTime?
+  preferredTo   DateTime?
+  resolvedAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([resolvedAt, createdAt])
 }

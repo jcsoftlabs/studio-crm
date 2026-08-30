@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import type { FormEcho } from '@/lib/form-echo';
+import { echoString, type FormEcho } from '@/lib/form-echo';
 
 export const CLIENT_FIELD_NAMES = [
   'firstName',
@@ -24,7 +24,7 @@ export function withEcho(defaults: ClientDefaults, echo: FormEcho | undefined): 
   if (!echo) return defaults;
   const merged = { ...defaults };
   for (const field of CLIENT_FIELD_NAMES) {
-    if (field in echo.values) merged[field] = echo.values[field];
+    merged[field] = echoString(echo, field, defaults[field]);
   }
   return merged;
 }

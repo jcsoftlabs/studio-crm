@@ -49,7 +49,13 @@
     "close": "Cerrar",
     "results": "{count, plural, =0 {Ningún resultado} one {1 resultado} other {# resultados}}",
     "active": "Activo",
-    "inactive": "Inactivo"
+    "inactive": "Inactivo",
+    "today": "Hoy",
+    "day": "Día",
+    "week": "Semana",
+    "all": "Todas",
+    "warning": "Atención",
+    "forceAnyway": "Guardar de todos modos"
   },
   "auth": {
     "loginTitle": "Iniciar sesión",
@@ -171,7 +177,67 @@
     "importCta": "Importar CSV"
   },
   "agenda": {
-    "title": "Citas"
+    "title": "Citas",
+    "subtitle": "Citas del día y de la semana, por empleada.",
+    "new": "Nueva cita",
+    "edit": "Modificar la cita",
+    "empty": "Ninguna cita este día.",
+    "noEmployees": "Registra primero a las empleadas.",
+    "closedDay": "Cerrado",
+    "reminders": "Recordatorios",
+    "waitlist": "Lista de espera",
+    "fields": {
+      "client": "Clienta",
+      "employee": "Empleada",
+      "services": "Servicios",
+      "date": "Fecha",
+      "startTime": "Hora de inicio",
+      "durationMin": "Duración (min)",
+      "notes": "Notas",
+      "source": "Origen",
+      "status": "Estado"
+    },
+    "source": {
+      "WALK_IN": "Sin cita previa",
+      "PHONE": "Teléfono",
+      "ONLINE": "En línea"
+    },
+    "status": {
+      "SCHEDULED": "Agendada",
+      "CONFIRMED": "Confirmada",
+      "IN_PROGRESS": "En curso",
+      "DONE": "Terminada",
+      "NO_SHOW": "Inasistencia",
+      "CANCELLED": "Cancelada"
+    },
+    "conflicts": {
+      "OVERLAP": "{name} ya tiene una cita a esa hora con esta empleada.",
+      "OUTSIDE_HOURS": "Fuera del horario de trabajo de la empleada.",
+      "TIME_OFF": "La empleada está de descanso en esa fecha.",
+      "INACTIVE_EMPLOYEE": "Esta empleada ya no está activa."
+    },
+    "hints": {
+      "duration": "Se rellena con el servicio y se puede ajustar.",
+      "drag": "Arrastra un bloque para moverlo de hora o de empleada."
+    },
+    "reminder": {
+      "title": "Recordatorios de mañana",
+      "subtitle": "Abre WhatsApp con el mensaje ya escrito. El envío es manual.",
+      "empty": "Ninguna cita mañana.",
+      "send": "Abrir WhatsApp",
+      "noPhone": "Sin teléfono",
+      "template": "Hola {client}, le recordamos su cita en {studio} mañana {date} a las {time}. ¡La esperamos!"
+    },
+    "waiting": {
+      "title": "Lista de espera",
+      "subtitle": "Clientas que esperan una cancelación.",
+      "add": "Añadir a la lista",
+      "empty": "Nadie en espera.",
+      "resolve": "Quitar de la lista",
+      "anyEmployee": "Cualquier empleada",
+      "anyService": "Cualquier servicio",
+      "freedSlot": "Se liberó un espacio: {count} clienta(s) en espera."
+    }
   },
   "services": {
     "title": "Servicios",
@@ -211,7 +277,32 @@
     "duration": "{count} min"
   },
   "staff": {
-    "title": "Empleadas"
+    "title": "Empleadas",
+    "subtitle": "Empleadas, horarios y descansos.",
+    "new": "Nueva empleada",
+    "empty": "Ninguna empleada registrada.",
+    "fields": {
+      "name": "Nombre",
+      "phone": "Teléfono",
+      "color": "Color en la agenda",
+      "account": "Cuenta vinculada",
+      "active": "Activa"
+    },
+    "noAccount": "Sin cuenta",
+    "schedule": {
+      "title": "Horario semanal",
+      "edit": "Editar el horario"
+    },
+    "timeOff": {
+      "title": "Descansos",
+      "add": "Añadir un descanso",
+      "empty": "Ningún descanso registrado.",
+      "from": "Desde",
+      "to": "Hasta",
+      "reason": "Motivo",
+      "delete": "Eliminar el descanso"
+    },
+    "onlyOwner": "Solo la propietaria administra al personal."
   },
   "caisse": {
     "title": "Caja"
@@ -239,6 +330,11 @@
     "nameRequired": "El nombre es obligatorio.",
     "categoryRequired": "Elige una categoría.",
     "hasServices": "La categoría todavía tiene servicios.",
-    "invalidDate": "Fecha no válida."
+    "invalidDate": "Fecha no válida.",
+    "clientRequired": "Elige una clienta.",
+    "employeeRequired": "Elige una empleada.",
+    "serviceRequired": "Añade al menos un servicio.",
+    "invalidDuration": "Duración no válida.",
+    "endBeforeStart": "El fin debe ser posterior al inicio."
   }
 }

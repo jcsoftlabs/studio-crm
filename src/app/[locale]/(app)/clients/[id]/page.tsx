@@ -4,7 +4,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import type { AppLocale } from '@prisma/client';
 import { Link } from '@/i18n/navigation';
 import { prisma } from '@/lib/db';
-import { requireUser } from '@/lib/permissions';
+import { requireUser, scopeToEmployee } from '@/lib/permissions';
 import { displayName } from '@/lib/clients';
 import { buildWhatsAppLink } from '@/lib/whatsapp';
 import { formatDateOnly, toDateInputValue } from '@/lib/dates';
@@ -22,13 +22,21 @@ export default async function ClientPage({
 }) {
   const { locale, id } = await params;
   setRequestLocale(locale);
-  await requireUser(locale);
+  const user = await requireUser(locale);
+  const scopedEmployeeId = await scopeToEmployee(user);
 
   const client = await prisma.client.findUnique({
     where: { id },
     include: { photos: { orderBy: { takenAt: 'desc' } } },
   });
   if (!client) notFound();
+
+  if (scopedEmployeeId) {
+    const served = await prisma.appointment.count({
+      where: { clientId: id, employeeId: scopedEmployeeId },
+    });
+    if (served === 0) notFound();
+  }
 
   const t = await getTranslations('clients');
   const tc = await getTranslations('common');

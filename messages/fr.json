@@ -49,7 +49,13 @@
     "close": "Fermer",
     "results": "{count, plural, =0 {Aucun résultat} one {1 résultat} other {# résultats}}",
     "active": "Actif",
-    "inactive": "Inactif"
+    "inactive": "Inactif",
+    "today": "Aujourd'hui",
+    "day": "Jour",
+    "week": "Semaine",
+    "all": "Toutes",
+    "warning": "Attention",
+    "forceAnyway": "Enregistrer quand même"
   },
   "auth": {
     "loginTitle": "Connexion",
@@ -171,7 +177,67 @@
     "importCta": "Importer un CSV"
   },
   "agenda": {
-    "title": "Rendez-vous"
+    "title": "Rendez-vous",
+    "subtitle": "Rendez-vous du jour et de la semaine, par employée.",
+    "new": "Nouveau rendez-vous",
+    "edit": "Modifier le rendez-vous",
+    "empty": "Aucun rendez-vous ce jour.",
+    "noEmployees": "Enregistrez d'abord les employées.",
+    "closedDay": "Fermé",
+    "reminders": "Relances",
+    "waitlist": "Liste d'attente",
+    "fields": {
+      "client": "Cliente",
+      "employee": "Employée",
+      "services": "Prestations",
+      "date": "Date",
+      "startTime": "Heure de début",
+      "durationMin": "Durée (min)",
+      "notes": "Notes",
+      "source": "Origine",
+      "status": "État"
+    },
+    "source": {
+      "WALK_IN": "Sans rendez-vous",
+      "PHONE": "Téléphone",
+      "ONLINE": "En ligne"
+    },
+    "status": {
+      "SCHEDULED": "Planifié",
+      "CONFIRMED": "Confirmé",
+      "IN_PROGRESS": "En cours",
+      "DONE": "Terminé",
+      "NO_SHOW": "Absence (no-show)",
+      "CANCELLED": "Annulé"
+    },
+    "conflicts": {
+      "OVERLAP": "{name} occupe déjà ce créneau avec cette employée.",
+      "OUTSIDE_HOURS": "En dehors des horaires de travail de l'employée.",
+      "TIME_OFF": "L'employée est en congé à cette date.",
+      "INACTIVE_EMPLOYEE": "Cette employée n'est plus active."
+    },
+    "hints": {
+      "duration": "Pré-remplie depuis la prestation, ajustable.",
+      "drag": "Glissez un bloc pour changer d'heure ou d'employée."
+    },
+    "reminder": {
+      "title": "Relances de demain",
+      "subtitle": "Ouvre WhatsApp avec le message déjà rédigé. L'envoi reste manuel.",
+      "empty": "Aucun rendez-vous demain.",
+      "send": "Ouvrir WhatsApp",
+      "noPhone": "Sans téléphone",
+      "template": "Bonjour {client}, nous vous rappelons votre rendez-vous chez {studio} demain {date} à {time}. À bientôt !"
+    },
+    "waiting": {
+      "title": "Liste d'attente",
+      "subtitle": "Clientes en attente d'un désistement.",
+      "add": "Ajouter à la liste",
+      "empty": "Personne en attente.",
+      "resolve": "Retirer de la liste",
+      "anyEmployee": "N'importe quelle employée",
+      "anyService": "N'importe quel service",
+      "freedSlot": "Un créneau s'est libéré : {count} cliente(s) en attente."
+    }
   },
   "services": {
     "title": "Services",
@@ -211,7 +277,32 @@
     "duration": "{count} min"
   },
   "staff": {
-    "title": "Employées"
+    "title": "Employées",
+    "subtitle": "Employées, horaires et congés.",
+    "new": "Nouvelle employée",
+    "empty": "Aucune employée enregistrée.",
+    "fields": {
+      "name": "Nom",
+      "phone": "Téléphone",
+      "color": "Couleur dans l'agenda",
+      "account": "Compte lié",
+      "active": "Active"
+    },
+    "noAccount": "Sans compte",
+    "schedule": {
+      "title": "Horaires hebdomadaires",
+      "edit": "Modifier les horaires"
+    },
+    "timeOff": {
+      "title": "Congés",
+      "add": "Ajouter un congé",
+      "empty": "Aucun congé enregistré.",
+      "from": "Du",
+      "to": "Au",
+      "reason": "Motif",
+      "delete": "Supprimer le congé"
+    },
+    "onlyOwner": "Seule la propriétaire gère le personnel."
   },
   "caisse": {
     "title": "Caisse"
@@ -239,6 +330,11 @@
     "nameRequired": "Le prénom est obligatoire.",
     "categoryRequired": "Choisissez une catégorie.",
     "hasServices": "La catégorie contient encore des services.",
-    "invalidDate": "Date invalide."
+    "invalidDate": "Date invalide.",
+    "clientRequired": "Choisissez une cliente.",
+    "employeeRequired": "Choisissez une employée.",
+    "serviceRequired": "Ajoutez au moins une prestation.",
+    "invalidDuration": "Durée invalide.",
+    "endBeforeStart": "La fin doit être après le début."
   }
 }

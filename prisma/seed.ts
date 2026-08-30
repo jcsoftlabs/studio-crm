@@ -49,6 +49,8 @@ async function main() {
 
   await seedCatalog();
   await seedClients();
+  await seedEmployees();
+  await seedAppointments();
 }
 
 const CATEGORIES = [
@@ -197,3 +199,139 @@ main()
     process.exit(1);
   })
   .finally(() => prisma.$disconnect());
+
+
+const EMPLOYEES = [
+  { name: 'Yamilet', color: '#e879f9', phone: '809-555-0101' },
+  { name: 'Rosanna', color: '#38bdf8', phone: '829-555-0102' },
+  { name: 'Massiel', color: '#fbbf24', phone: '849-555-0103' },
+];
+
+const EMPLOYEE_HOURS = [
+  { weekday: 0, closed: true, openMinute: 540, closeMinute: 1080 },
+  { weekday: 1, closed: false, openMinute: 540, closeMinute: 1080 },
+  { weekday: 2, closed: false, openMinute: 540, closeMinute: 1080 },
+  { weekday: 3, closed: false, openMinute: 540, closeMinute: 1080 },
+  { weekday: 4, closed: false, openMinute: 540, closeMinute: 1080 },
+  { weekday: 5, closed: false, openMinute: 540, closeMinute: 1140 },
+  { weekday: 6, closed: false, openMinute: 540, closeMinute: 1140 },
+];
+
+async function seedStaffAccount(email: string, name: string, role: Role) {
+  const passwordHash = await bcrypt.hash(OWNER_PASSWORD, 10);
+  return prisma.user.upsert({
+    where: { email },
+    update: { name, role, active: true },
+    create: { email, name, passwordHash, role, locale: 'es' },
+  });
+}
+
+async function seedEmployees() {
+  await seedStaffAccount('recepcion@studio.do', 'Recepción', Role.RECEPTION);
+  // Yamilet a un compte styliste : c'est le cas qui exerce la restriction du §3.2.
+  const stylistUser = await seedStaffAccount('yamilet@studio.do', 'Yamilet', Role.STYLIST);
+
+  for (const [index, employee] of EMPLOYEES.entries()) {
+    const existing = await prisma.employee.findFirst({
+      where: { name: employee.name, deletedAt: null },
+    });
+    if (existing) {
+      if (employee.name === 'Yamilet' && existing.userId === null) {
+        await prisma.employee.update({ where: { id: existing.id }, data: { userId: stylistUser.id } });
+      }
+      continue;
+    }
+
+    const created = await prisma.employee.create({
+      data: {
+        ...employee,
+        order: index,
+        userId: employee.name === 'Yamilet' ? stylistUser.id : null,
+      },
+    });
+    await prisma.employeeSchedule.createMany({
+      data: EMPLOYEE_HOURS.map((hours) => ({ employeeId: created.id, ...hours })),
+    });
+  }
+  console.log(`Empleadas : ${await prisma.employee.count({ where: { deletedAt: null } })}`);
+}
+
+/** Santo Domingo est à UTC-4 toute l'année : pas d'heure d'été à gérer ici. */
+const STUDIO_OFFSET_HOURS = 4;
+
+function studioDate(day: Date, minutes: number): Date {
+  const stamp = new Date(day);
+  stamp.setUTCHours(0, 0, 0, 0);
+  return new Date(stamp.getTime() + (minutes + STUDIO_OFFSET_HOURS * 60) * 60000);
+}
+
+async function seedAppointments() {
+  const existing = await prisma.appointment.count();
+  if (existing > 0) {
+    console.log(`Citas : ${existing} (ya sembradas)`);
+    return;
+  }
+
+  const employees = await prisma.employee.findMany({
+    where: { deletedAt: null },
+    orderBy: { order: 'asc' },
+  });
+  const clients = await prisma.client.findMany({ where: { deletedAt: null }, take: 20 });
+  const services = await prisma.service.findMany({ where: { deletedAt: null } });
+  if (employees.length === 0 || clients.length === 0 || services.length === 0) return;
+
+  // Une semaine à partir du lundi courant, heure du studio.
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+  const monday = new Date(today);
+  monday.setUTCDate(monday.getUTCDate() - ((monday.getUTCDay() + 6) % 7));
+
+  let created = 0;
+  let cursor = 0;
+
+  for (let dayOffset = 0; dayOffset < 6; dayOffset += 1) {
+    const day = new Date(monday);
+    day.setUTCDate(day.getUTCDate() + dayOffset);
+
+    for (const [employeeIndex, employee] of employees.entries()) {
+      let minute = 9 * 60 + employeeIndex * 30;
+
+      for (let slot = 0; slot < 3; slot += 1) {
+        const client = clients[cursor % clients.length];
+        const service = services[(cursor * 3 + employeeIndex) % services.length];
+        cursor += 1;
+
+        const startAt = studioDate(day, minute);
+        const endAt = new Date(startAt.getTime() + service.durationMin * 60000);
+        if (minute + service.durationMin > 18 * 60) break;
+
+        await prisma.appointment.create({
+          data: {
+            clientId: client.id,
+            employeeId: employee.id,
+            startAt,
+            endAt,
+            status: dayOffset < 2 ? 'DONE' : 'SCHEDULED',
+            source: slot === 0 ? 'PHONE' : 'WALK_IN',
+            items: {
+              create: [
+                {
+                  serviceId: service.id,
+                  employeeId: employee.id,
+                  priceCents: service.priceCents,
+                  durationMin: service.durationMin,
+                  order: 0,
+                },
+              ],
+            },
+          },
+        });
+
+        created += 1;
+        minute += service.durationMin + 15;
+      }
+    }
+  }
+
+  console.log(`Citas : ${created}`);
+}

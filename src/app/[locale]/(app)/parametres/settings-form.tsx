@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { minutesToHHmm } from '@/lib/dates';
 import { formatRateBp } from '@/lib/money';
+import { echoString } from '@/lib/form-echo';
 import type { StudioSettingsWithHours } from '@/lib/settings';
 import { updateStudioSettings, type SettingsState } from './actions';
 
@@ -48,8 +49,7 @@ export function SettingsForm({ settings }: { settings: StudioSettingsWithHours }
 
   const f = (key: string) => t(`fields.${key}` as FieldKey);
   // Après une erreur, React a vidé les champs : on rejoue la saisie renvoyée par l'action.
-  const echo = state.echo?.values;
-  const dv = (name: string, fallback: string) => echo?.[name] ?? fallback;
+  const dv = (name: string, fallback: string) => echoString(state.echo, name, fallback);
 
   return (
     <form action={action} className="flex flex-col gap-5">

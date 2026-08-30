@@ -3,7 +3,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Prisma } from '@prisma/client';
 import { Link } from '@/i18n/navigation';
 import { prisma } from '@/lib/db';
-import { requireUser } from '@/lib/permissions';
+import { requireUser, scopeToEmployee } from '@/lib/permissions';
 import { searchTerms } from '@/lib/clients';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,7 +21,8 @@ export default async function ClientsPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  await requireUser(locale);
+  const user = await requireUser(locale);
+  const scopedEmployeeId = await scopeToEmployee(user);
 
   const { q = '', page: rawPage = '1' } = await searchParams;
   const t = await getTranslations('clients');
@@ -37,6 +38,8 @@ export default async function ClientsPage({
   const where: Prisma.ClientWhereInput = {
     deletedAt: null,
     ...(filters.length > 0 ? { OR: filters } : {}),
+    // §3.2 : une styliste ne voit que les clientes qu'elle sert.
+    ...(scopedEmployeeId ? { appointments: { some: { employeeId: scopedEmployeeId } } } : {}),
   };
 
   const [clients, total] = await Promise.all([

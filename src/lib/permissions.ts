@@ -34,3 +34,18 @@ export async function requireRole(...roles: Role[]): Promise<SessionUser> {
 export function hasRole(user: SessionUser | null, ...roles: Role[]) {
   return !!user && roles.includes(user.role);
 }
+
+/**
+ * §3.2 : une styliste ne voit que son propre agenda et les clientes qu'elle sert.
+ * Renvoie l'employée à laquelle la restreindre, ou null si elle voit tout.
+ */
+export async function scopeToEmployee(user: SessionUser): Promise<string | null> {
+  if (user.role !== Role.STYLIST) return null;
+  const { prisma } = await import('@/lib/db');
+  const employee = await prisma.employee.findUnique({
+    where: { userId: user.id },
+    select: { id: true },
+  });
+  // Compte styliste sans fiche employée : on ne lui montre rien plutôt que tout.
+  return employee?.id ?? '__none__';
+}

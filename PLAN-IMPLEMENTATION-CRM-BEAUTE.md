@@ -216,16 +216,49 @@ le 14 février ; envoi puis suppression d'une photo.
   Sans cet écho, la saisie était perdue au moindre retour en erreur — l'avertissement de doublon
   était inutilisable. Appliqué aussi au formulaire des Paramètres (phase 0).
 
-### Phase 2 — Agenda (1,5 semaine) — cœur du produit
-- Vue jour et semaine, colonnes par employée, code couleur par employée.
-- Création d'un rendez-vous : cliente → service(s) → employée → créneau. Durée pré-remplie
-  depuis le service, modifiable.
-- **Détection des conflits côté serveur** : pas de chevauchement pour une même employée.
-  Respect des horaires de travail et des congés.
-- Glisser-déposer pour déplacer un rendez-vous (desktop), formulaire de replanification (mobile).
-- Statuts et transitions, marquage `NO_SHOW`.
-- Liste d'attente : clientes en attente d'un désistement.
-- Rappel WhatsApp automatique 24 h avant, template bilingue selon la langue de la cliente.
+### Phase 2 — Agenda (1,5 semaine) — cœur du produit — ✅ **livrée le 2026-08-30**
+- [x] Vue jour (grille, colonnes par employée, couleurs) et vue semaine. Sur mobile, liste
+      chronologique du jour : la grille est illisible au doigt.
+- [x] Création d'un rendez-vous : cliente → service(s) → employée → créneau. Durée pré-remplie
+      depuis les prestations puis modifiable.
+- [x] **Détection des conflits côté serveur**, appliquée au formulaire comme au glisser-déposer.
+      Chevauchement sur une même employée : **refusé**, non forçable. Hors horaires de travail ou
+      pendant un congé : **avertissement forçable** (arbitrage de la propriétaire).
+- [x] Glisser-déposer natif HTML5 (desktop), formulaire de replanification (mobile).
+- [x] Statuts et transitions, marquage `NO_SHOW`. Une annulation libère le créneau, une absence
+      non prévenue ne le libère pas : elle a bien occupé l'agenda.
+- [x] Liste d'attente : cliente, prestation et employée souhaitées facultatives, fenêtre de dates.
+- [x] ~~Rappel WhatsApp automatique 24 h avant~~ → **file « Relances de demain »** : message
+      pré-rempli dans un lien `wa.me`, envoi manuel (§7 bis, pas de Cloud API).
+- [x] Seed §8 : 3 employées avec couleurs et horaires, une semaine de rendez-vous, comptes
+      `RECEPTION` et `STYLIST`.
+
+**Vérifié en conditions réelles** : rendez-vous à cheval sur un autre chez la même employée →
+refusé en nommant la cliente qui occupe le créneau, sans bouton pour forcer ; rendez-vous à 07:30
+avant l'ouverture → averti, forçable, créé après confirmation et stocké à `11:30 UTC` (Santo
+Domingo = UTC−4) ; glisser-déposer d'un bloc de Yamilet 07:30 vers Massiel 16:00 → déplacé, avec
+l'employée reportée sur les lignes du rendez-vous ; glisser-déposer sur un créneau occupé →
+refusé, base inchangée ; relance de demain → lien `wa.me/18092001000` avec le message rempli.
+Connexion en `STYLIST` : agenda réduit à sa colonne, navigation réduite à Accueil / Agenda /
+Clientes, liste des clientes tombée de 20 à 14, fiche d'une cliente non servie en 404 par URL
+directe, Paramètres refusés.
+
+**Écarts actés en phase 2** :
+- **`Employee`, `EmployeeSchedule` et `TimeOff` sont remontés de la phase 4** : l'agenda exige
+  des colonnes par employée et le respect des horaires et des congés, il ne pouvait pas attendre.
+  Restent en phase 4 : `salaryType`, `baseSalaryCents`, les taux de commission et l'écran de
+  règlement.
+- `AppointmentItem` gagne `durationMin` et `order` : la durée est modifiable sur le rendez-vous,
+  elle ne peut donc pas être relue depuis le service.
+- La restriction §3.2 sur les stylistes, laissée ouverte en phase 1, est **fermée**
+  (`scopeToEmployee` dans `src/lib/permissions.ts`).
+- Le sélecteur de cliente du formulaire est un `select` natif : à revoir en recherche filtrante
+  au-delà de quelques centaines de clientes.
+- L'écho de formulaire (phase 1) gère désormais les champs multiples : sans lui, un conflit vidait
+  la cliente et les prestations avant même de pouvoir cliquer « Enregistrer quand même ».
+- **Aucune librairie ajoutée** : glisser-déposer en API native HTML5.
+- Le build affiche un avertissement `jose` / `CompressionStream` en Edge Runtime : il vient d'une
+  dépendance d'Auth.js, pas du code du projet.
 
 ### Phase 3 — Caisse, facturation et NCF (1,5 semaine)
 - Ouverture et fermeture de caisse par employée, comptage, écart.
