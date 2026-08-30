@@ -8,12 +8,22 @@ export type StorageAdapter = {
   remove(key: string): Promise<void>;
 };
 
+export class StorageNotConfiguredError extends Error {
+  constructor() {
+    super('storageNotConfigured');
+    this.name = 'StorageNotConfiguredError';
+  }
+}
+
 /**
- * Vercel Blob en production ; sans jeton (poste de dev) on retombe sur le disque
- * pour ne pas bloquer le travail hors ligne.
+ * Vercel Blob en production ; sans jeton (poste de dev) on retombe sur le disque.
+ * En production le disque est en lecture seule : mieux vaut refuser clairement
+ * que d'écrire dans le vide.
  */
 export function getStorage(): StorageAdapter {
-  return process.env.BLOB_READ_WRITE_TOKEN ? blobStorageAdapter : localStorageAdapter;
+  if (process.env.BLOB_READ_WRITE_TOKEN) return blobStorageAdapter;
+  if (process.env.NODE_ENV === 'production') throw new StorageNotConfiguredError();
+  return localStorageAdapter;
 }
 
 export function buildPhotoKey(clientId: string, fileName: string): string {

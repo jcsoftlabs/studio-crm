@@ -8,7 +8,7 @@ import { prisma } from '@/lib/db';
 import { ForbiddenError, requireRole } from '@/lib/permissions';
 import { buildSearchName, digitsOnly, displayName } from '@/lib/clients';
 import { parseDateOnly } from '@/lib/dates';
-import { buildPhotoKey, getStorage } from '@/lib/storage';
+import { buildPhotoKey, getStorage, StorageNotConfiguredError } from '@/lib/storage';
 import { echoForm, type FormEcho } from '@/lib/form-echo';
 
 export type ClientState = {
@@ -19,7 +19,8 @@ export type ClientState = {
   echo?: FormEcho;
 };
 
-const MAX_PHOTO_BYTES = 8 * 1024 * 1024;
+// Aligné sur la limite de corps de requête de Vercel.
+const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 const ALL_ROLES = [Role.OWNER, Role.RECEPTION, Role.STYLIST] as const;
@@ -164,7 +165,14 @@ export async function addClientPhoto(_prev: ClientState, formData: FormData): Pr
   if (!client) return { error: 'notFound' };
 
   const key = buildPhotoKey(clientId, file.name);
-  const stored = await getStorage().put(key, file);
+
+  let stored;
+  try {
+    stored = await getStorage().put(key, file);
+  } catch (error) {
+    if (error instanceof StorageNotConfiguredError) return { error: 'storageNotConfigured' };
+    throw error;
+  }
 
   await prisma.clientPhoto.create({
     data: { clientId, type, url: stored.url, storageKey: stored.key },

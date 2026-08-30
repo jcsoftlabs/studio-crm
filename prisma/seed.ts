@@ -18,6 +18,14 @@ const DEFAULT_HOURS = [
 ];
 
 async function main() {
+  // Ce jeu de données est fictif : 20 clientes, une semaine de rendez-vous, un bon
+  // cadeau et une séquence NCF de test. Il n'a rien à faire sur une base réelle.
+  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_DEMO_SEED !== 'yes') {
+    throw new Error(
+      'db:seed insère des données de démonstration. Utilisez db:bootstrap en production.',
+    );
+  }
+
   await prisma.studioSettings.upsert({
     where: { id: 'singleton' },
     update: {},

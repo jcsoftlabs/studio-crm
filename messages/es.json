@@ -382,7 +382,8 @@
     "alreadyVoided": "La factura ya está anulada.",
     "giftCardInvalid": "Bono regalo no válido o sin saldo.",
     "sessionAlreadyOpen": "Ya hay una caja abierta.",
-    "invalidAmount": "Monto no válido."
+    "invalidAmount": "Monto no válido.",
+    "storageNotConfigured": "El almacenamiento de fotos no está configurado. Añade BLOB_READ_WRITE_TOKEN."
   },
   "facture": {
     "title": "Factura",

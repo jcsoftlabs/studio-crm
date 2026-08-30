@@ -7,7 +7,8 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 const nextConfig: NextConfig = {
   outputFileTracingRoot: path.dirname(fileURLToPath(import.meta.url)),
-  experimental: { serverActions: { bodySizeLimit: '8mb' } },
+  // Vercel refuse les corps de requête au-delà de ~4,5 Mo : rester en deçà.
+  experimental: { serverActions: { bodySizeLimit: '4mb' } },
 };
 
 export default withNextIntl(nextConfig);
