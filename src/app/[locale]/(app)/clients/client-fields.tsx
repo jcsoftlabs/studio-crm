@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { echoString, type FormEcho } from '@/lib/form-echo';
 
@@ -15,6 +16,7 @@ export const CLIENT_FIELD_NAMES = [
   'notes',
   'allergies',
   'preferences',
+  'locale',
 ] as const;
 
 export type ClientDefaults = Record<(typeof CLIENT_FIELD_NAMES)[number], string>;
@@ -38,6 +40,7 @@ export const EMPTY_CLIENT: ClientDefaults = {
   notes: '',
   allergies: '',
   preferences: '',
+  locale: 'es',
 };
 
 export function ClientFields({
@@ -81,6 +84,14 @@ export function ClientFields({
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="birthDate">{t('fields.birthDate')}</Label>
             <Input id="birthDate" name="birthDate" type="date" defaultValue={defaults.birthDate} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="locale">{t('fields.locale')}</Label>
+            <Select id="locale" name="locale" defaultValue={defaults.locale}>
+              <option value="es">{tc('spanish')}</option>
+              <option value="fr">{tc('french')}</option>
+            </Select>
+            <p className="text-xs text-muted-foreground">{t('hints.locale')}</p>
           </div>
           <div className="flex flex-col gap-1.5 sm:col-span-2">
             <Label htmlFor="allergies">{t('fields.allergies')}</Label>

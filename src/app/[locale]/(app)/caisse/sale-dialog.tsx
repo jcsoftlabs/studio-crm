@@ -1,0 +1,422 @@
+'use client';
+
+import { useMemo, useState, useTransition } from 'react';
+import { Plus, Trash2 } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
+import { NcfType, PaymentMethod, type AppLocale } from '@prisma/client';
+import { useRouter } from '@/i18n/navigation';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select } from '@/components/ui/select';
+import { formatMoney, formatRateBp, parseMoneyToCents } from '@/lib/money';
+import { computeTotals, type DraftLine } from '@/lib/invoice';
+import { issueInvoice } from './actions';
+
+type Option = { id: string; name: string };
+type ServiceOption = Option & { priceCents: number };
+export type PendingAppointment = {
+  id: string;
+  label: string;
+  clientId: string | null;
+  lines: DraftLine[];
+};
+
+type PaymentRow = { method: PaymentMethod; amount: string; reference: string };
+
+export function SaleDialog({
+  clients,
+  services,
+  employees,
+  appointments,
+  itbisRateBp,
+  currencySymbol,
+  preset,
+}: {
+  clients: Option[];
+  services: ServiceOption[];
+  employees: Option[];
+  appointments: PendingAppointment[];
+  itbisRateBp: number;
+  currencySymbol: string;
+  preset?: PendingAppointment;
+}) {
+  const t = useTranslations('facture');
+  const tc = useTranslations('common');
+  const te = useTranslations('errors');
+  const locale = useLocale() as AppLocale;
+  const router = useRouter();
+
+  const [open, setOpen] = useState(false);
+  const [clientId, setClientId] = useState(preset?.clientId ?? '');
+  const [appointmentId, setAppointmentId] = useState(preset?.id ?? '');
+  const [ncfType, setNcfType] = useState<NcfType>(NcfType.B02);
+  const [lines, setLines] = useState<DraftLine[]>(preset?.lines ?? []);
+  const [payments, setPayments] = useState<PaymentRow[]>([
+    { method: PaymentMethod.CASH, amount: '', reference: '' },
+  ]);
+  const [error, setError] = useState<string | null>(null);
+  const [issued, setIssued] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  const totals = useMemo(() => computeTotals(lines, itbisRateBp), [lines, itbisRateBp]);
+  const paid = payments.reduce((sum, row) => sum + (parseMoneyToCents(row.amount) ?? 0), 0);
+  const balance = totals.totalCents - paid;
+  const money = (cents: number) => formatMoney(cents, locale, currencySymbol);
+
+  function addService(serviceId: string) {
+    const service = services.find((entry) => entry.id === serviceId);
+    if (!service) return;
+    setLines((prev) => [
+      ...prev,
+      {
+        description: service.name,
+        serviceId: service.id,
+        employeeId: null,
+        quantity: 1,
+        unitPriceCents: service.priceCents,
+        discountCents: 0,
+      },
+    ]);
+  }
+
+  function updateLine(index: number, patch: Partial<DraftLine>) {
+    setLines((prev) => prev.map((line, i) => (i === index ? { ...line, ...patch } : line)));
+  }
+
+  function submit() {
+    setError(null);
+    startTransition(async () => {
+      const result = await issueInvoice({
+        clientId: clientId === '' ? null : clientId,
+        appointmentId: appointmentId === '' ? null : appointmentId,
+        ncfType,
+        lines,
+        payments: payments
+          .map((row) => ({
+            method: row.method,
+            amountCents: parseMoneyToCents(row.amount) ?? 0,
+            reference: row.reference,
+          }))
+          .filter((row) => row.amountCents > 0),
+      });
+
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      setIssued(result.ncf ?? null);
+      if (result.invoiceId) router.push(`/caisse/factures/${result.invoiceId}`);
+    });
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="size-4" aria-hidden />
+          {t('new')}
+        </Button>
+      </DialogTrigger>
+      <DialogContent closeLabel={tc('close')} className="max-w-2xl">
+        <DialogTitle>{t('new')}</DialogTitle>
+        <DialogDescription className="sr-only">{t('title')}</DialogDescription>
+
+        <div className="mt-4 flex flex-col gap-4">
+          {appointments.length > 0 ? (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="appointmentId">{t('fromAppointment')}</Label>
+              <Select
+                id="appointmentId"
+                value={appointmentId}
+                onChange={(event) => {
+                  const next = appointments.find((entry) => entry.id === event.target.value);
+                  setAppointmentId(event.target.value);
+                  if (next) {
+                    setLines(next.lines);
+                    setClientId(next.clientId ?? '');
+                  }
+                }}
+              >
+                <option value="">{t('walkIn')}</option>
+                {appointments.map((appointment) => (
+                  <option key={appointment.id} value={appointment.id}>
+                    {appointment.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          ) : null}
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="clientId">{t('client')}</Label>
+              <Select
+                id="clientId"
+                value={clientId}
+                onChange={(event) => setClientId(event.target.value)}
+              >
+                <option value="">{t('noClient')}</option>
+                {clients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="ncfType">{t('ncfType')}</Label>
+              <Select
+                id="ncfType"
+                value={ncfType}
+                onChange={(event) => setNcfType(event.target.value as NcfType)}
+              >
+                {Object.values(NcfType).map((value) => (
+                  <option key={value} value={value}>
+                    {value.replace('_', '-')}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="addService">{t('lines')}</Label>
+            <Select
+              id="addService"
+              value=""
+              onChange={(event) => {
+                addService(event.target.value);
+                event.target.value = '';
+              }}
+            >
+              <option value="">{t('addLine')}</option>
+              {services.map((service) => (
+                <option key={service.id} value={service.id}>
+                  {service.name}
+                </option>
+              ))}
+            </Select>
+
+            {lines.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{te('linesRequired')}</p>
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {lines.map((line, index) => (
+                  <li key={index} className="flex flex-wrap items-end gap-2 rounded-md border border-border p-2">
+                    <div className="min-w-40 flex-1">
+                      <Label htmlFor={`desc-${index}`} className="text-xs">
+                        {t('lines')}
+                      </Label>
+                      <Input
+                        id={`desc-${index}`}
+                        value={line.description}
+                        onChange={(event) => updateLine(index, { description: event.target.value })}
+                      />
+                    </div>
+                    <div className="w-16">
+                      <Label htmlFor={`qty-${index}`} className="text-xs">
+                        {tc('quantity')}
+                      </Label>
+                      <Input
+                        id={`qty-${index}`}
+                        inputMode="numeric"
+                        value={line.quantity}
+                        onChange={(event) =>
+                          updateLine(index, { quantity: Math.max(1, Number(event.target.value) || 1) })
+                        }
+                      />
+                    </div>
+                    <div className="w-28">
+                      <Label htmlFor={`price-${index}`} className="text-xs">
+                        {tc('unitPrice')}
+                      </Label>
+                      <Input
+                        id={`price-${index}`}
+                        inputMode="decimal"
+                        value={(line.unitPriceCents / 100).toString()}
+                        onChange={(event) =>
+                          updateLine(index, {
+                            unitPriceCents: parseMoneyToCents(event.target.value) ?? 0,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="w-28">
+                      <Label htmlFor={`disc-${index}`} className="text-xs">
+                        {tc('discount')}
+                      </Label>
+                      <Input
+                        id={`disc-${index}`}
+                        inputMode="decimal"
+                        value={(line.discountCents / 100).toString()}
+                        onChange={(event) =>
+                          updateLine(index, {
+                            discountCents: parseMoneyToCents(event.target.value) ?? 0,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="w-36">
+                      <Label htmlFor={`emp-${index}`} className="text-xs">
+                        {t('servedBy')}
+                      </Label>
+                      <Select
+                        id={`emp-${index}`}
+                        value={line.employeeId ?? ''}
+                        onChange={(event) =>
+                          updateLine(index, { employeeId: event.target.value || null })
+                        }
+                      >
+                        <option value="">—</option>
+                        {employees.map((employee) => (
+                          <option key={employee.id} value={employee.id}>
+                            {employee.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={tc('remove')}
+                      onClick={() => setLines((prev) => prev.filter((_, i) => i !== index))}
+                    >
+                      <Trash2 className="size-4" aria-hidden />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <dl className="flex flex-col gap-1 rounded-md border border-border p-3 text-sm">
+            <div className="flex justify-between">
+              <dt>{tc('subtotal')}</dt>
+              <dd>{money(totals.subtotalCents)}</dd>
+            </div>
+            <div className="flex justify-between">
+              <dt>{t('itbis', { rate: formatRateBp(itbisRateBp, locale) })}</dt>
+              <dd>{money(totals.itbisCents)}</dd>
+            </div>
+            <div className="flex justify-between font-semibold">
+              <dt>{tc('total')}</dt>
+              <dd>{money(totals.totalCents)}</dd>
+            </div>
+          </dl>
+
+          <div className="flex flex-col gap-2">
+            <Label>{t('payments')}</Label>
+            {payments.map((row, index) => (
+              <div key={index} className="flex flex-wrap items-end gap-2">
+                <div className="w-40">
+                  <Select
+                    aria-label={t('payments')}
+                    value={row.method}
+                    onChange={(event) =>
+                      setPayments((prev) =>
+                        prev.map((entry, i) =>
+                          i === index
+                            ? { ...entry, method: event.target.value as PaymentMethod }
+                            : entry,
+                        ),
+                      )
+                    }
+                  >
+                    {Object.values(PaymentMethod).map((method) => (
+                      <option key={method} value={method}>
+                        {t(`method.${method}` as 'method.CASH')}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+                <div className="w-32">
+                  <Input
+                    aria-label={tc('amount')}
+                    inputMode="decimal"
+                    value={row.amount}
+                    onChange={(event) =>
+                      setPayments((prev) =>
+                        prev.map((entry, i) =>
+                          i === index ? { ...entry, amount: event.target.value } : entry,
+                        ),
+                      )
+                    }
+                  />
+                </div>
+                {row.method === PaymentMethod.GIFT_CARD || row.method === PaymentMethod.TRANSFER ? (
+                  <div className="w-40">
+                    <Input
+                      aria-label={t('giftCardCode')}
+                      placeholder={t('giftCardCode')}
+                      value={row.reference}
+                      onChange={(event) =>
+                        setPayments((prev) =>
+                          prev.map((entry, i) =>
+                            i === index ? { ...entry, reference: event.target.value } : entry,
+                          ),
+                        )
+                      }
+                    />
+                  </div>
+                ) : null}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={tc('remove')}
+                  onClick={() => setPayments((prev) => prev.filter((_, i) => i !== index))}
+                >
+                  <Trash2 className="size-4" aria-hidden />
+                </Button>
+              </div>
+            ))}
+            <Button
+              variant="outline"
+              size="sm"
+              className="self-start"
+              onClick={() =>
+                setPayments((prev) => [
+                  ...prev,
+                  { method: PaymentMethod.CARD, amount: '', reference: '' },
+                ])
+              }
+            >
+              <Plus className="size-4" aria-hidden />
+              {t('addPayment')}
+            </Button>
+
+            <p className="text-sm text-muted-foreground">
+              {balance > 0
+                ? `${t('balance')} : ${money(balance)}`
+                : `${t('change')} : ${money(Math.abs(balance))}`}
+            </p>
+          </div>
+
+          {error ? (
+            <p role="alert" className="text-sm text-destructive">
+              {te(error as 'generic')}
+            </p>
+          ) : null}
+          {issued ? (
+            <p className="text-sm text-muted-foreground">{t('issued', { ncf: issued })}</p>
+          ) : null}
+
+          <Button
+            size="lg"
+            disabled={pending || lines.length === 0 || balance > 0}
+            onClick={submit}
+          >
+            {pending ? tc('saving') : t('issue')}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

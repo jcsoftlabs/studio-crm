@@ -260,15 +260,49 @@ directe, Paramètres refusés.
 - Le build affiche un avertissement `jose` / `CompressionStream` en Edge Runtime : il vient d'une
   dépendance d'Auth.js, pas du code du projet.
 
-### Phase 3 — Caisse, facturation et NCF (1,5 semaine)
-- Ouverture et fermeture de caisse par employée, comptage, écart.
-- Encaissement d'un rendez-vous ou vente directe au comptoir.
-- Calcul ITBIS 18 %, application des remises, utilisation d'un forfait ou d'un bon cadeau.
-- Paiement multi-moyens sur une même facture (ex. moitié efectivo, moitié tarjeta).
-- **Attribution du NCF** selon les règles du §4, écran de gestion des séquences réservé à `OWNER`.
-- Facture PDF bilingue (langue de la cliente) : logo, RNC du studio, NCF, détail, ITBIS, total.
-- Envoi de la facture par WhatsApp, ou impression thermique 80 mm.
-- Annulation de facture avec motif obligatoire + entrée dans `AuditLog`.
+### Phase 3 — Caisse, facturation et NCF (1,5 semaine) — ✅ **livrée le 2026-08-30**
+- [x] Ouverture et fermeture de caisse par employée, comptage, écart. Espèces attendues = fond
+      initial + part espèces des factures + entrées − sorties ; cartes et virements ne passent
+      pas par le tiroir.
+- [x] Encaissement d'un rendez-vous (pré-rempli depuis ses prestations) ou vente directe.
+- [x] ITBIS calculé **après** remise, remises par ligne, bon cadeau débité à l'émission.
+- [x] Paiement multi-moyens sur une même facture, avec reste à payer et rendu.
+- [x] **Attribution du NCF** conforme au §4 : `SELECT ... FOR UPDATE` sur `NcfSequence` dans la
+      transaction d'émission, `Invoice.ncf` unique, aucun `count()`. Écran de gestion des
+      séquences réservé à `OWNER`, avec alerte sous le seuil et à l'approche de l'expiration.
+- [x] Facture bilingue : logo, RNC, NCF, détail, ITBIS, total, pied de facture des Paramètres.
+- [x] Impression thermique 80 mm via `@page` (pas de librairie PDF : le navigateur imprime et
+      exporte en PDF, le pilote de l'imprimante fait le reste).
+- [x] Annulation avec motif obligatoire, `AuditLog` `INVOICE_VOID`, bon cadeau recrédité.
+
+**Vérifié en conditions réelles** : ouverture de caisse à RD$ 2 000 ; facture d'une manucure en
+gel à RD$ 1 500 → ITBIS RD$ 270, total RD$ 1 770 ; règlement mixte espèces RD$ 770 + bon cadeau
+RD$ 1 000, solde du bon passé de 2 000 à 1 000 ; NCF `B0200000001` attribué et séquence
+incrémentée à 1 ; annulation motivée → statut `VOIDED`, bon recrédité à 2 000, `AuditLog` écrit,
+et **`currentNumber` reste à 1 : le numéro est consommé, pas recyclé**.
+**Concurrence prouvée** : 5 transactions simultanées sur la même séquence → 5 numéros distincts
+et consécutifs, aucun doublon.
+
+**Écarts actés en phase 3** :
+- **`ClientPackage` et `GiftCard` remontés de la phase 5** : la phase 3 exige l'utilisation d'un
+  forfait ou d'un bon cadeau. Restent en phase 5 : points de fidélité, segments, campagnes.
+- Nouveau modèle `InvoiceLine` (absent du §4) : sans lignes, la facture ne peut pas porter le
+  « détail » que le §5 exige.
+- `Invoice` gagne `discountCents`, `itbisRateBp` (taux figé à l'émission : une facture ne change
+  pas si l'ITBIS change ensuite), `locale` et `voidReason`.
+- `Payment` gagne `giftCardId` pour pouvoir recréditer le bon à l'annulation.
+- **`Client.locale` ajouté** : le §5 demandait des modèles « selon la langue de la cliente », mais
+  le §4 ne prévoyait aucune colonne pour la stocker. Les relances et le message de facture
+  suivent maintenant la langue de la cliente, pas celle de l'interface.
+- **La facture ne peut pas partir en pièce jointe sur WhatsApp** : un lien `wa.me` ne transporte
+  que du texte. On envoie un récapitulatif (NCF, total) ; l'impression et le PDF restent locaux.
+  Une page de facture publique par lien signé exposerait le détail des soins : **à trancher avec
+  la propriétaire avant de l'implémenter**.
+- Pas de librairie PDF : impression navigateur avec une règle `@page` 80 mm.
+
+**Dette relevée** : le Postgres hébergé refuse les connexions au-delà de son quota
+(`FATAL: sorry, too many clients already`) — constaté à 12 transactions parallèles. `connection_limit`
+est documenté dans `.env.example` et **doit être posé sur Vercel avant la mise en production**.
 
 ### Phase 4 — Personnel, commissions, stock (1 semaine)
 - Horaires, disponibilités, congés des employées.

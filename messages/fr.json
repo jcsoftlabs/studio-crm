@@ -55,7 +55,19 @@
     "week": "Semaine",
     "all": "Toutes",
     "warning": "Attention",
-    "forceAnyway": "Enregistrer quand même"
+    "forceAnyway": "Enregistrer quand même",
+    "total": "Total",
+    "subtotal": "Sous-total",
+    "discount": "Remise",
+    "quantity": "Qté",
+    "unitPrice": "Prix",
+    "print": "Imprimer",
+    "share": "Partager",
+    "open": "Ouvrir",
+    "close2": "Fermer la caisse",
+    "reason": "Motif",
+    "amount": "Montant",
+    "remove": "Retirer"
   },
   "auth": {
     "loginTitle": "Connexion",
@@ -155,11 +167,13 @@
       "birthDate": "Anniversaire",
       "notes": "Notes",
       "allergies": "Allergies",
-      "preferences": "Préférences"
+      "preferences": "Préférences",
+      "locale": "Langue de la cliente"
     },
     "hints": {
       "allergies": "Affiché en rouge sur la fiche et avant chaque prestation.",
-      "preferences": "Couleur préférée, longueur, produits à éviter…"
+      "preferences": "Couleur préférée, longueur, produits à éviter…",
+      "locale": "Les relances et les factures sont rédigées dans cette langue."
     },
     "sections": {
       "contact": "Contact",
@@ -305,7 +319,29 @@
     "onlyOwner": "Seule la propriétaire gère le personnel."
   },
   "caisse": {
-    "title": "Caisse"
+    "title": "Caisse",
+    "subtitle": "Ouverture, encaissements et clôture du jour.",
+    "closed": "La caisse est fermée.",
+    "openTitle": "Ouvrir la caisse",
+    "openingCents": "Fond de caisse initial",
+    "employee": "Employée responsable",
+    "openedAt": "Ouverte le {date}",
+    "openedBy": "Responsable : {name}",
+    "sales": "Encaissements du jour",
+    "noSales": "Aucun encaissement pour le moment.",
+    "newSale": "Nouvel encaissement",
+    "movements": "Entrées et sorties",
+    "noMovements": "Aucun mouvement.",
+    "addMovement": "Enregistrer un mouvement",
+    "movementIn": "Entrée",
+    "movementOut": "Sortie",
+    "closeTitle": "Clôture de caisse",
+    "countedCents": "Espèces comptées",
+    "expectedCents": "Espèces attendues",
+    "differenceCents": "Écart",
+    "closeConfirm": "Fermer la caisse définitivement",
+    "history": "Clôtures précédentes",
+    "pendingAppointments": "Rendez-vous à encaisser"
   },
   "stock": {
     "title": "Stock"
@@ -335,6 +371,76 @@
     "employeeRequired": "Choisissez une employée.",
     "serviceRequired": "Ajoutez au moins une prestation.",
     "invalidDuration": "Durée invalide.",
-    "endBeforeStart": "La fin doit être après le début."
+    "endBeforeStart": "La fin doit être après le début.",
+    "noSequence": "Aucune séquence NCF active pour ce type. Enregistrez-la dans Paramètres.",
+    "exhausted": "La séquence NCF est épuisée. Demandez-en une nouvelle à la DGII.",
+    "expired": "La séquence NCF a expiré.",
+    "noCashSession": "Ouvrez la caisse avant d'encaisser.",
+    "linesRequired": "Ajoutez au moins une ligne.",
+    "paymentMismatch": "Les règlements ne couvrent pas le total.",
+    "voidReasonRequired": "Le motif est obligatoire.",
+    "alreadyVoided": "La facture est déjà annulée.",
+    "giftCardInvalid": "Bon cadeau invalide ou sans solde.",
+    "sessionAlreadyOpen": "Une caisse est déjà ouverte.",
+    "invalidAmount": "Montant invalide."
+  },
+  "facture": {
+    "title": "Facture",
+    "new": "Nouvel encaissement",
+    "walkIn": "Vente directe",
+    "fromAppointment": "Depuis un rendez-vous",
+    "client": "Cliente",
+    "noClient": "Sans cliente (consommateur final)",
+    "lines": "Détail",
+    "addLine": "Ajouter une ligne",
+    "freeLine": "Ligne libre",
+    "ncfType": "Type de comprobante",
+    "ncf": "NCF",
+    "itbis": "ITBIS ({rate} %)",
+    "payments": "Règlements",
+    "addPayment": "Ajouter un règlement",
+    "balance": "Reste à payer",
+    "change": "Rendu",
+    "issue": "Émettre la facture",
+    "issued": "Facture {ncf} émise.",
+    "void": "Annuler la facture",
+    "voidReason": "Motif de l'annulation",
+    "voided": "Annulée",
+    "voidWarning": "Le NCF annulé est consommé, pas recyclé. Une nouvelle facture portera un autre numéro.",
+    "rnc": "RNC",
+    "issuedAt": "Date",
+    "servedBy": "Servie par",
+    "thanks": "Merci de votre visite !",
+    "shareText": "Bonjour {client}, voici votre facture de {studio}. NCF {ncf}. Total {total}. Merci !",
+    "list": "Factures",
+    "empty": "Aucune facture pour le moment.",
+    "method": {
+      "CASH": "Espèces",
+      "CARD": "Carte",
+      "TRANSFER": "Virement",
+      "GIFT_CARD": "Bon cadeau",
+      "PACKAGE": "Forfait"
+    },
+    "giftCardCode": "Code du bon",
+    "packageUse": "Utiliser une séance du forfait"
+  },
+  "ncf": {
+    "title": "Séquences NCF",
+    "subtitle": "Comprobantes fiscaux autorisés par la DGII.",
+    "new": "Nouvelle séquence",
+    "empty": "Aucune séquence enregistrée. La facturation est impossible.",
+    "type": "Type",
+    "prefix": "Préfixe",
+    "currentNumber": "Dernier numéro utilisé",
+    "maxNumber": "Numéro maximum autorisé",
+    "expiresAt": "Expire le",
+    "remaining": "{count} restants",
+    "lowWarning": "Il reste peu de comprobantes ou la séquence expire bientôt.",
+    "active": "Active",
+    "typeHint": {
+      "B01": "Crédit fiscal — pour les clientes avec RNC",
+      "B02": "Consommateur final — le cas courant",
+      "E_CF": "Comprobante électronique"
+    }
   }
 }

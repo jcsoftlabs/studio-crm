@@ -101,6 +101,7 @@ export default async function ClientPage({
               notes: client.notes,
               allergies: client.allergies,
               preferences: client.preferences,
+              locale: client.locale,
             }}
           />
         </CardContent>

@@ -1,6 +1,6 @@
 import { ArrowLeft } from 'lucide-react';
-import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server';
-import { AppLocale, AppointmentStatus } from '@prisma/client';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { AppointmentStatus } from '@prisma/client';
 import { Link } from '@/i18n/navigation';
 import { prisma } from '@/lib/db';
 import { requireUser, scopeToEmployee } from '@/lib/permissions';
@@ -10,6 +10,7 @@ import { formatInStudioTz } from '@/lib/dates';
 import { addDaysToDay, localDayRange, todayInStudio } from '@/lib/agenda';
 import { buildWhatsAppLink } from '@/lib/whatsapp';
 import { fillTemplate } from '@/lib/whatsapp-templates';
+import { getTemplate } from '@/lib/messages';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ReminderList } from './reminder-list';
@@ -20,7 +21,6 @@ export default async function RemindersPage({ params }: { params: Promise<{ loca
   const user = await requireUser(locale);
   const t = await getTranslations('agenda.reminder');
   const tc = await getTranslations('common');
-  const appLocale = locale as AppLocale;
 
   const settings = await getStudioSettings();
   const tomorrow = addDaysToDay(todayInStudio(settings.timezone), 1);
@@ -37,13 +37,12 @@ export default async function RemindersPage({ params }: { params: Promise<{ loca
     include: { client: true, employee: { select: { name: true } } },
   });
 
-  // Le message part dans la langue du studio par défaut ; l'espagnol est la référence (§3.1).
-  const messages = (await getMessages()) as Record<string, Record<string, Record<string, string>>>;
-  const template = messages.agenda.reminder.template;
-
-  const rows = appointments.map((appointment) => {
-    const date = formatInStudioTz(appointment.startAt, 'EEEE d MMMM', appLocale, settings.timezone);
-    const time = formatInStudioTz(appointment.startAt, 'HH:mm', appLocale, settings.timezone);
+  const rows = await Promise.all(appointments.map(async (appointment) => {
+    // Chaque message suit la langue de la cliente (§3.1).
+    const clientLocale = appointment.client.locale;
+    const template = await getTemplate(clientLocale, 'agenda.reminder.template');
+    const date = formatInStudioTz(appointment.startAt, 'EEEE d MMMM', clientLocale, settings.timezone);
+    const time = formatInStudioTz(appointment.startAt, 'HH:mm', clientLocale, settings.timezone);
     const message = fillTemplate(template, {
       client: appointment.client.firstName,
       studio: settings.name.trim() || 'el studio',
@@ -60,7 +59,7 @@ export default async function RemindersPage({ params }: { params: Promise<{ loca
         ? null
         : buildWhatsAppLink(appointment.client.phone, message),
     };
-  });
+  }));
 
   return (
     <div className="flex max-w-3xl flex-col gap-5">

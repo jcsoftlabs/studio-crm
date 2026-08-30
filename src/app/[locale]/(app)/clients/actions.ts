@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from '@/i18n/navigation';
 import { z } from 'zod';
-import { PhotoType, Role } from '@prisma/client';
+import { AppLocale, PhotoType, Role } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { ForbiddenError, requireRole } from '@/lib/permissions';
 import { buildSearchName, digitsOnly, displayName } from '@/lib/clients';
@@ -33,6 +33,7 @@ const clientSchema = z.object({
   notes: z.string().trim().max(2000),
   allergies: z.string().trim().max(1000),
   preferences: z.string().trim().max(1000),
+  locale: z.nativeEnum(AppLocale),
 });
 
 function readClient(formData: FormData) {
@@ -46,6 +47,7 @@ function readClient(formData: FormData) {
     notes: formData.get('notes') ?? '',
     allergies: formData.get('allergies') ?? '',
     preferences: formData.get('preferences') ?? '',
+    locale: formData.get('locale') ?? AppLocale.es,
   });
 }
 

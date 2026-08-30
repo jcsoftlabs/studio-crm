@@ -126,6 +126,9 @@ model Client {
   allergies   String @default("")
   preferences String @default("")
 
+  /// Langue des messages envoyés à la cliente (§3.1), indépendante de l'interface.
+  locale AppLocale @default(es)
+
   /// Colonnes dérivées, maintenues à l'écriture : recherche sans accent ni format.
   searchName  String @default("")
   phoneDigits String @default("")
@@ -137,6 +140,9 @@ model Client {
   photos       ClientPhoto[]
   appointments Appointment[]
   waitlist     WaitlistEntry[]
+  invoices     Invoice[]
+  packages     ClientPackage[]
+  giftCards    GiftCard[]
 
   @@index([searchName])
   @@index([phoneDigits])
@@ -195,12 +201,14 @@ model Service {
 
   appointmentItems AppointmentItem[]
   waitlist         WaitlistEntry[]
+  invoiceLines     InvoiceLine[]
 
   @@index([categoryId, order])
 }
 
 model Package {
   id            String  @id @default(cuid())
+  clientPackages ClientPackage[]
   nameEs        String
   nameFr        String
   priceCents    Int
@@ -250,6 +258,8 @@ model Employee {
   appointments     Appointment[]
   appointmentItems AppointmentItem[]
   waitlist         WaitlistEntry[]
+  cashSessions     CashSession[]
+  invoiceLines     InvoiceLine[]
 
   @@index([deletedAt, order])
 }
@@ -299,7 +309,8 @@ model Appointment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  items AppointmentItem[]
+  items    AppointmentItem[]
+  invoices Invoice[]
 
   @@index([employeeId, startAt])
   @@index([startAt])
@@ -340,4 +351,191 @@ model WaitlistEntry {
   createdAt DateTime @default(now())
 
   @@index([resolvedAt, createdAt])
+}
+
+
+enum NcfType {
+  B01
+  B02
+  E_CF
+}
+
+enum InvoiceStatus {
+  ISSUED
+  VOIDED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+  GIFT_CARD
+  PACKAGE
+}
+
+enum CashMovementType {
+  IN
+  OUT
+}
+
+/// Séquence de comprobantes fiscaux délivrée par la DGII.
+model NcfSequence {
+  id     String  @id @default(cuid())
+  type   NcfType
+  prefix String
+  /// Dernier numéro attribué. Incrémenté sous verrou, jamais par un count().
+  currentNumber Int
+  maxNumber     Int
+  expiresAt     DateTime?
+  active        Boolean   @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  invoices Invoice[]
+
+  @@index([type, active])
+}
+
+model Invoice {
+  id            String       @id @default(cuid())
+  client        Client?      @relation(fields: [clientId], references: [id])
+  clientId      String?
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+  appointmentId String?
+
+  /// Unique : deux factures ne peuvent jamais porter le même comprobante.
+  ncf        String        @unique
+  ncfType    NcfType
+  sequence   NcfSequence   @relation(fields: [sequenceId], references: [id])
+  sequenceId String
+
+  subtotalCents Int
+  discountCents Int @default(0)
+  itbisCents    Int
+  totalCents    Int
+  /// Taux figé à l'émission : une facture ne change pas si l'ITBIS change ensuite.
+  itbisRateBp   Int
+
+  status     InvoiceStatus @default(ISSUED)
+  issuedAt   DateTime      @default(now())
+  voidedAt   DateTime?
+  voidReason String?
+
+  /// Langue de la cliente, pour l'impression et le message WhatsApp.
+  locale AppLocale @default(es)
+
+  cashSession   CashSession? @relation(fields: [cashSessionId], references: [id])
+  cashSessionId String?
+
+  createdBy String?
+  createdAt DateTime @default(now())
+
+  lines    InvoiceLine[]
+  payments Payment[]
+
+  @@index([issuedAt])
+  @@index([clientId, issuedAt])
+  @@index([cashSessionId])
+}
+
+model InvoiceLine {
+  id        String  @id @default(cuid())
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoiceId String
+
+  service   Service? @relation(fields: [serviceId], references: [id])
+  serviceId String?
+  employee  Employee? @relation(fields: [employeeId], references: [id])
+  employeeId String?
+
+  description    String
+  quantity       Int @default(1)
+  unitPriceCents Int
+  discountCents  Int @default(0)
+  totalCents     Int
+  order          Int @default(0)
+
+  @@index([invoiceId, order])
+}
+
+model Payment {
+  id        String  @id @default(cuid())
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoiceId String
+
+  method     PaymentMethod
+  amountCents Int
+  reference  String?
+
+  giftCard   GiftCard? @relation(fields: [giftCardId], references: [id])
+  giftCardId String?
+
+  createdAt DateTime @default(now())
+
+  @@index([invoiceId])
+}
+
+model CashSession {
+  id         String   @id @default(cuid())
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  employeeId String
+
+  openedAt  DateTime  @default(now())
+  closedAt  DateTime?
+  openedBy  String?
+  closedBy  String?
+
+  openingCents    Int
+  countedCents    Int?
+  expectedCents   Int?
+  differenceCents Int?
+
+  movements CashMovement[]
+  invoices  Invoice[]
+
+  @@index([closedAt, openedAt])
+}
+
+model CashMovement {
+  id            String      @id @default(cuid())
+  cashSession   CashSession @relation(fields: [cashSessionId], references: [id], onDelete: Cascade)
+  cashSessionId String
+
+  type        CashMovementType
+  amountCents Int
+  reason      String           @default("")
+  createdBy   String?
+  createdAt   DateTime         @default(now())
+
+  @@index([cashSessionId])
+}
+
+model ClientPackage {
+  id        String  @id @default(cuid())
+  client    Client  @relation(fields: [clientId], references: [id])
+  clientId  String
+  package   Package @relation(fields: [packageId], references: [id])
+  packageId String
+
+  sessionsUsed Int      @default(0)
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  @@index([clientId, expiresAt])
+}
+
+model GiftCard {
+  id       String  @id @default(cuid())
+  code     String  @unique
+  client   Client? @relation(fields: [clientId], references: [id])
+  clientId String?
+
+  amountCents  Int
+  balanceCents Int
+  expiresAt    DateTime?
+  active       Boolean   @default(true)
+
+  createdAt DateTime @default(now())
+  payments  Payment[]
 }

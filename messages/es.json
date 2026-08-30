@@ -55,7 +55,19 @@
     "week": "Semana",
     "all": "Todas",
     "warning": "Atención",
-    "forceAnyway": "Guardar de todos modos"
+    "forceAnyway": "Guardar de todos modos",
+    "total": "Total",
+    "subtotal": "Subtotal",
+    "discount": "Descuento",
+    "quantity": "Cant.",
+    "unitPrice": "Precio",
+    "print": "Imprimir",
+    "share": "Compartir",
+    "open": "Abrir",
+    "close2": "Cerrar caja",
+    "reason": "Motivo",
+    "amount": "Monto",
+    "remove": "Quitar"
   },
   "auth": {
     "loginTitle": "Iniciar sesión",
@@ -155,11 +167,13 @@
       "birthDate": "Cumpleaños",
       "notes": "Notas",
       "allergies": "Alergias",
-      "preferences": "Preferencias"
+      "preferences": "Preferencias",
+      "locale": "Idioma de la clienta"
     },
     "hints": {
       "allergies": "Se muestra en rojo en la ficha y antes de cada servicio.",
-      "preferences": "Color favorito, largo, productos que evita…"
+      "preferences": "Color favorito, largo, productos que evita…",
+      "locale": "Los recordatorios y las facturas se escriben en este idioma."
     },
     "sections": {
       "contact": "Contacto",
@@ -305,7 +319,29 @@
     "onlyOwner": "Solo la propietaria administra al personal."
   },
   "caisse": {
-    "title": "Caja"
+    "title": "Caja",
+    "subtitle": "Apertura, cobros y cierre del día.",
+    "closed": "La caja está cerrada.",
+    "openTitle": "Abrir la caja",
+    "openingCents": "Fondo de caja inicial",
+    "employee": "Empleada responsable",
+    "openedAt": "Abierta el {date}",
+    "openedBy": "Responsable : {name}",
+    "sales": "Cobros del día",
+    "noSales": "Ningún cobro todavía.",
+    "newSale": "Nuevo cobro",
+    "movements": "Entradas y salidas",
+    "noMovements": "Ningún movimiento.",
+    "addMovement": "Registrar un movimiento",
+    "movementIn": "Entrada",
+    "movementOut": "Salida",
+    "closeTitle": "Cierre de caja",
+    "countedCents": "Efectivo contado",
+    "expectedCents": "Efectivo esperado",
+    "differenceCents": "Diferencia",
+    "closeConfirm": "Cerrar la caja definitivamente",
+    "history": "Cierres anteriores",
+    "pendingAppointments": "Citas por cobrar"
   },
   "stock": {
     "title": "Inventario"
@@ -335,6 +371,76 @@
     "employeeRequired": "Elige una empleada.",
     "serviceRequired": "Añade al menos un servicio.",
     "invalidDuration": "Duración no válida.",
-    "endBeforeStart": "El fin debe ser posterior al inicio."
+    "endBeforeStart": "El fin debe ser posterior al inicio.",
+    "noSequence": "Ninguna secuencia NCF activa para este tipo. Regístrala en Ajustes.",
+    "exhausted": "La secuencia NCF se agotó. Solicita una nueva a la DGII.",
+    "expired": "La secuencia NCF venció.",
+    "noCashSession": "Abre la caja antes de cobrar.",
+    "linesRequired": "Añade al menos una línea.",
+    "paymentMismatch": "Los pagos no cubren el total.",
+    "voidReasonRequired": "El motivo es obligatorio.",
+    "alreadyVoided": "La factura ya está anulada.",
+    "giftCardInvalid": "Bono regalo no válido o sin saldo.",
+    "sessionAlreadyOpen": "Ya hay una caja abierta.",
+    "invalidAmount": "Monto no válido."
+  },
+  "facture": {
+    "title": "Factura",
+    "new": "Nuevo cobro",
+    "walkIn": "Venta directa",
+    "fromAppointment": "Desde una cita",
+    "client": "Clienta",
+    "noClient": "Sin clienta (consumidor final)",
+    "lines": "Detalle",
+    "addLine": "Añadir una línea",
+    "freeLine": "Línea libre",
+    "ncfType": "Tipo de comprobante",
+    "ncf": "NCF",
+    "itbis": "ITBIS ({rate} %)",
+    "payments": "Pagos",
+    "addPayment": "Añadir un pago",
+    "balance": "Resta por pagar",
+    "change": "Vuelto",
+    "issue": "Emitir la factura",
+    "issued": "Factura {ncf} emitida.",
+    "void": "Anular la factura",
+    "voidReason": "Motivo de la anulación",
+    "voided": "Anulada",
+    "voidWarning": "El NCF anulado se consume, no se recicla. Se emitirá una factura nueva con otro número.",
+    "rnc": "RNC",
+    "issuedAt": "Fecha",
+    "servedBy": "Atendida por",
+    "thanks": "¡Gracias por su visita!",
+    "shareText": "Hola {client}, aquí está su factura de {studio}. NCF {ncf}. Total {total}. ¡Gracias!",
+    "list": "Facturas",
+    "empty": "Ninguna factura todavía.",
+    "method": {
+      "CASH": "Efectivo",
+      "CARD": "Tarjeta",
+      "TRANSFER": "Transferencia",
+      "GIFT_CARD": "Bono regalo",
+      "PACKAGE": "Paquete"
+    },
+    "giftCardCode": "Código del bono",
+    "packageUse": "Usar una sesión del paquete"
+  },
+  "ncf": {
+    "title": "Secuencias NCF",
+    "subtitle": "Comprobantes fiscales autorizados por la DGII.",
+    "new": "Nueva secuencia",
+    "empty": "Ninguna secuencia registrada. No se puede facturar.",
+    "type": "Tipo",
+    "prefix": "Prefijo",
+    "currentNumber": "Último número usado",
+    "maxNumber": "Número máximo autorizado",
+    "expiresAt": "Vence el",
+    "remaining": "{count} restantes",
+    "lowWarning": "Quedan pocos comprobantes o la secuencia vence pronto.",
+    "active": "Activa",
+    "typeHint": {
+      "B01": "Crédito fiscal — para clientas con RNC",
+      "B02": "Consumidor final — el caso habitual",
+      "E_CF": "Comprobante electrónico"
+    }
   }
 }

@@ -51,6 +51,7 @@ async function main() {
   await seedClients();
   await seedEmployees();
   await seedAppointments();
+  await seedNcf();
 }
 
 const CATEGORIES = [
@@ -334,4 +335,27 @@ async function seedAppointments() {
   }
 
   console.log(`Citas : ${created}`);
+}
+
+async function seedNcf() {
+  const existing = await prisma.ncfSequence.findFirst({ where: { type: 'B02' } });
+  if (!existing) {
+    // Séquence de test : les vrais numéros viennent de la DGII et se saisissent
+    // dans Paramètres → Séquences NCF.
+    const expiresAt = new Date();
+    expiresAt.setUTCFullYear(expiresAt.getUTCFullYear() + 1);
+    await prisma.ncfSequence.create({
+      data: { type: 'B02', prefix: 'B02', currentNumber: 0, maxNumber: 1000, expiresAt },
+    });
+  }
+
+  const cardCode = 'REGALO-2026';
+  const card = await prisma.giftCard.findUnique({ where: { code: cardCode } });
+  if (!card) {
+    await prisma.giftCard.create({
+      data: { code: cardCode, amountCents: 200000, balanceCents: 200000 },
+    });
+  }
+
+  console.log(`NCF : ${await prisma.ncfSequence.count()} secuencia(s), bono ${cardCode}`);
 }
