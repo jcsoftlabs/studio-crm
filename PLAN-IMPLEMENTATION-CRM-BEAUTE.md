@@ -271,8 +271,11 @@ directe, Paramètres refusés.
       transaction d'émission, `Invoice.ncf` unique, aucun `count()`. Écran de gestion des
       séquences réservé à `OWNER`, avec alerte sous le seuil et à l'approche de l'expiration.
 - [x] Facture bilingue : logo, RNC, NCF, détail, ITBIS, total, pied de facture des Paramètres.
-- [x] Impression thermique 80 mm via `@page` (pas de librairie PDF : le navigateur imprime et
-      exporte en PDF, le pilote de l'imprimante fait le reste).
+- [x] Impression thermique via une **page ticket dédiée** `/{locale}/ticket/{id}`, hors du gabarit
+      applicatif : le ticket est rendu **aux dimensions réelles du papier à l'écran comme sur la
+      feuille**, d'après `printerWidthMm` des Paramètres (`@page` injecté depuis le réglage, pas
+      figé à 80 mm). Pas de librairie PDF : le navigateur imprime et exporte en PDF, le pilote de
+      l'imprimante fait le reste.
 - [x] Annulation avec motif obligatoire, `AuditLog` `INVOICE_VOID`, bon cadeau recrédité.
 
 **Vérifié en conditions réelles** : ouverture de caisse à RD$ 2 000 ; facture d'une manucure en
@@ -299,6 +302,18 @@ et consécutifs, aucun doublon.
   Une page de facture publique par lien signé exposerait le détail des soins : **à trancher avec
   la propriétaire avant de l'implémenter**.
 - Pas de librairie PDF : impression navigateur avec une règle `@page` 80 mm.
+
+**Corrections après revue de l'impression** :
+- Il n'existait **aucun aperçu à l'écran** : les styles du ticket ne vivaient que dans
+  `@media print`. Une page ticket dédiée les rend maintenant visibles au format réel.
+- La règle `@page { size: 80mm }` était **globale** : elle s'appliquait à toutes les pages du CRM.
+  Elle est désormais portée par la seule page ticket.
+- L'impression aurait embarqué **la sidebar et l'en-tête** : `print:hidden` posé sur le gabarit
+  applicatif, et le ticket sorti de ce gabarit.
+- Le gabarit d'impression émettait un **second `<html>/<body>` imbriqué** dans celui de la racine,
+  d'où une erreur d'hydratation React. Réduit à un simple conteneur.
+- Vérifié : ticket mesuré à 302 px = 80 mm exactement, puis 219 px = 58 mm après changement du
+  réglage ; rendu papier simulé sans chrome, en noir sur blanc.
 
 **Dette relevée** : le Postgres hébergé refuse les connexions au-delà de son quota
 (`FATAL: sorry, too many clients already`) — constaté à 12 transactions parallèles. `connection_limit`

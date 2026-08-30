@@ -422,7 +422,8 @@
       "PACKAGE": "Paquete"
     },
     "giftCardCode": "Código del bono",
-    "packageUse": "Usar una sesión del paquete"
+    "packageUse": "Usar una sesión del paquete",
+    "ticketPreview": "Vista del ticket"
   },
   "ncf": {
     "title": "Secuencias NCF",

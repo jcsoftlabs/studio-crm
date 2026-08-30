@@ -1,0 +1,27 @@
+/* Portée à la seule page ticket : la règle @page ne doit pas toucher le reste du CRM.
+   La taille réelle est injectée par la page, d'après printerWidthMm des Paramètres. */
+@media print {
+  html,
+  body {
+    background: #fff;
+    margin: 0;
+    padding: 0;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  main {
+    display: block !important;
+    min-height: 0 !important;
+  }
+
+  /* Le papier thermique n'imprime qu'en noir : ni aplats gris ni ombres. */
+  .ticket,
+  .ticket * {
+    background: transparent !important;
+    color: #000 !important;
+    box-shadow: none !important;
+  }
+}

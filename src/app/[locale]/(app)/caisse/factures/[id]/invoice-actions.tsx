@@ -15,12 +15,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { voidInvoice } from '../../actions';
 
-export function PrintButton() {
-  const tc = useTranslations('common');
+export function TicketButton({ href, label }: { href: string; label: string }) {
   return (
-    <Button variant="outline" onClick={() => window.print()}>
-      <Printer className="size-4" aria-hidden />
-      {tc('print')}
+    <Button asChild variant="outline">
+      <a href={href} target="_blank" rel="noopener noreferrer">
+        <Printer className="size-4" aria-hidden />
+        {label}
+      </a>
     </Button>
   );
 }

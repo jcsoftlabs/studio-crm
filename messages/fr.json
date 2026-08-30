@@ -422,7 +422,8 @@
       "PACKAGE": "Forfait"
     },
     "giftCardCode": "Code du bon",
-    "packageUse": "Utiliser une séance du forfait"
+    "packageUse": "Utiliser une séance du forfait",
+    "ticketPreview": "Aperçu du ticket"
   },
   "ncf": {
     "title": "Séquences NCF",

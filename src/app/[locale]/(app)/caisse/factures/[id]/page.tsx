@@ -15,7 +15,7 @@ import { getTemplate } from '@/lib/messages';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { PrintButton, ShareButton, VoidInvoiceDialog } from './invoice-actions';
+import { ShareButton, TicketButton, VoidInvoiceDialog } from './invoice-actions';
 
 export default async function InvoicePage({
   params,
@@ -38,6 +38,7 @@ export default async function InvoicePage({
   if (!invoice) notFound();
 
   const t = await getTranslations('facture');
+  const tf = t;
   const tc = await getTranslations('common');
   const settings = await getStudioSettings();
   const appLocale = locale as AppLocale;
@@ -66,7 +67,7 @@ export default async function InvoicePage({
             {tc('back')}
           </Link>
         </Button>
-        <PrintButton />
+        <TicketButton href={`/${locale}/ticket/${invoice.id}`} label={tf('ticketPreview')} />
         {waLink ? <ShareButton link={waLink} /> : null}
         {user.role === Role.OWNER && invoice.status === InvoiceStatus.ISSUED ? (
           <VoidInvoiceDialog id={invoice.id} />

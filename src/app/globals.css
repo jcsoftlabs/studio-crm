@@ -71,28 +71,3 @@
   }
 }
 
-/* Impression : ticket thermique 80 mm par défaut, le pilote gère le reste. */
-@media print {
-  @page {
-    size: 80mm auto;
-    margin: 4mm;
-  }
-
-  body {
-    background: #fff;
-    color: #000;
-  }
-
-  .print\:hidden {
-    display: none !important;
-  }
-
-  .print-ticket {
-    width: 72mm;
-    max-width: 72mm;
-    border: 0;
-    box-shadow: none;
-    font-size: 11px;
-    line-height: 1.35;
-  }
-}
