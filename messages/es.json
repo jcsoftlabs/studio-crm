@@ -1,0 +1,120 @@
+{
+  "common": {
+    "appName": "Studio CRM",
+    "save": "Guardar",
+    "saving": "Guardando…",
+    "saved": "Cambios guardados",
+    "cancel": "Cancelar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "search": "Buscar",
+    "loading": "Cargando…",
+    "empty": "Nada por aquí todavía",
+    "yes": "Sí",
+    "no": "No",
+    "closed": "Cerrado",
+    "language": "Idioma",
+    "spanish": "Español",
+    "french": "Francés",
+    "signOut": "Cerrar sesión",
+    "nav": {
+      "dashboard": "Inicio",
+      "agenda": "Citas",
+      "clients": "Clientas",
+      "services": "Servicios",
+      "caisse": "Caja",
+      "stock": "Inventario",
+      "staff": "Empleadas",
+      "rapports": "Informes",
+      "parametres": "Ajustes",
+      "more": "Más"
+    },
+    "weekdays": {
+      "0": "Domingo",
+      "1": "Lunes",
+      "2": "Martes",
+      "3": "Miércoles",
+      "4": "Jueves",
+      "5": "Viernes",
+      "6": "Sábado"
+    }
+  },
+  "auth": {
+    "loginTitle": "Iniciar sesión",
+    "loginSubtitle": "Accede al CRM del studio",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "submit": "Entrar",
+    "submitting": "Entrando…",
+    "invalidCredentials": "Correo o contraseña incorrectos"
+  },
+  "dashboard": {
+    "title": "Inicio",
+    "welcome": "Hola, {name}",
+    "emptyState": "El panel se llenará a partir de la fase 2 (citas).",
+    "setupTitle": "Configura tu studio",
+    "setupBody": "Añade el nombre, el RNC, la dirección y los horarios en Ajustes.",
+    "setupCta": "Ir a Ajustes"
+  },
+  "parametres": {
+    "title": "Ajustes",
+    "subtitle": "Toda la información del studio se edita aquí.",
+    "ownerOnly": "Solo la propietaria puede modificar los ajustes del studio.",
+    "sections": {
+      "identity": "Identidad",
+      "contact": "Contacto",
+      "fiscal": "Fiscalidad y facturación",
+      "hours": "Horarios",
+      "preferences": "Preferencias"
+    },
+    "fields": {
+      "name": "Nombre comercial",
+      "legalName": "Razón social",
+      "rnc": "RNC",
+      "address": "Dirección",
+      "city": "Ciudad",
+      "province": "Provincia",
+      "phone": "Teléfono",
+      "whatsapp": "WhatsApp",
+      "email": "Correo electrónico",
+      "website": "Sitio web",
+      "logoUrl": "URL del logo",
+      "currencySymbol": "Símbolo de moneda",
+      "showUsd": "Mostrar también en US$",
+      "usdRate": "Tasa US$ (1 US$ = ? RD$)",
+      "itbisRate": "ITBIS (%)",
+      "defaultCommissionRate": "Comisión por defecto (%)",
+      "invoiceFooter": "Pie de factura",
+      "printerWidthMm": "Ancho de impresión (mm)",
+      "ncfLowThreshold": "Alerta de NCF restantes",
+      "ncfExpiryWarningDays": "Alerta de vencimiento NCF (días)",
+      "defaultLocale": "Idioma por defecto",
+      "timezone": "Zona horaria",
+      "openMinute": "Apertura",
+      "closeMinute": "Cierre"
+    },
+    "hints": {
+      "rnc": "Necesario para emitir facturas con NCF válidos.",
+      "itbisRate": "18 % en República Dominicana.",
+      "printerWidthMm": "80 mm para la impresora térmica del mostrador.",
+      "usdRate": "No se convierte nada automáticamente; solo se muestra."
+    }
+  },
+  "clients": { "title": "Clientas" },
+  "agenda": { "title": "Citas" },
+  "services": { "title": "Servicios" },
+  "staff": { "title": "Empleadas" },
+  "caisse": { "title": "Caja" },
+  "stock": { "title": "Inventario" },
+  "fidelite": { "title": "Fidelidad" },
+  "rapports": { "title": "Informes" },
+  "errors": {
+    "generic": "Algo salió mal. Inténtalo de nuevo.",
+    "forbidden": "No tienes permiso para esta acción.",
+    "notFound": "No encontrado.",
+    "required": "Campo obligatorio",
+    "invalidNumber": "Número no válido",
+    "invalidTime": "Hora no válida (HH:MM)",
+    "closeBeforeOpen": "El cierre debe ser posterior a la apertura"
+  }
+}

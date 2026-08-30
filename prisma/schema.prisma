@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  RECEPTION
+  STYLIST
+}
+
+enum AppLocale {
+  es
+  fr
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         Role      @default(STYLIST)
+  locale       AppLocale @default(es)
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  auditLogs AuditLog[]
+
+  @@index([deletedAt])
+}
+
+/// Ligne unique (id = "singleton"). Toutes les informations du studio sont
+/// modifiables depuis Paramètres : rien n'est codé en dur ni lu dans l'environnement.
+model StudioSettings {
+  id String @id @default("singleton")
+
+  name        String  @default("")
+  legalName   String  @default("")
+  rnc         String  @default("")
+  address     String  @default("")
+  city        String  @default("")
+  province    String  @default("")
+  phone       String  @default("")
+  whatsapp    String  @default("")
+  email       String  @default("")
+  website     String  @default("")
+  logoUrl     String?
+
+  currencyCode   String @default("DOP")
+  currencySymbol String @default("RD$")
+  showUsd        Boolean @default(false)
+  usdRateCents   Int?
+
+  /// ITBIS en points de base : 1800 = 18,00 %. Entier, jamais de Float (§3.3).
+  itbisRateBp             Int @default(1800)
+  defaultCommissionRateBp Int @default(0)
+
+  timezone      String    @default("America/Santo_Domingo")
+  defaultLocale AppLocale @default(es)
+
+  invoiceFooterEs String @default("")
+  invoiceFooterFr String @default("")
+  printerWidthMm  Int    @default(80)
+
+  ncfLowThreshold      Int @default(50)
+  ncfExpiryWarningDays Int @default(30)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  businessHours BusinessHours[]
+}
+
+model BusinessHours {
+  id       String @id @default(cuid())
+  settings StudioSettings @relation(fields: [settingsId], references: [id], onDelete: Cascade)
+  settingsId String @default("singleton")
+
+  /// 0 = dimanche … 6 = samedi
+  weekday Int
+  closed  Boolean @default(false)
+  /// Minutes depuis minuit, heure locale du studio
+  openMinute  Int @default(540)
+  closeMinute Int @default(1080)
+
+  @@unique([settingsId, weekday])
+}
+
+model AuditLog {
+  id       String   @id @default(cuid())
+  user     User?    @relation(fields: [userId], references: [id])
+  userId   String?
+  action   String
+  entity   String
+  entityId String?
+  before   Json?
+  after    Json?
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+}
