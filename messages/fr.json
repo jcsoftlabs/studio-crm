@@ -121,13 +121,15 @@
       "defaultLocale": "Langue par défaut",
       "timezone": "Fuseau horaire",
       "openMinute": "Ouverture",
-      "closeMinute": "Fermeture"
+      "closeMinute": "Fermeture",
+      "allowSalesWithoutNcf": "Autoriser les encaissements sans NCF"
     },
     "hints": {
       "rnc": "Nécessaire pour émettre des factures avec des NCF valides.",
       "itbisRate": "18 % en République dominicaine.",
       "printerWidthMm": "80 mm pour l'imprimante thermique du comptoir.",
-      "usdRate": "Rien n'est converti automatiquement, c'est un affichage."
+      "usdRate": "Rien n'est converti automatiquement, c'est un affichage.",
+      "allowSalesWithoutNcf": "Le temps que l'enregistrement DGII aboutisse. À désactiver dès réception des séquences."
     }
   },
   "clients": {
@@ -424,7 +426,15 @@
     },
     "giftCardCode": "Code du bon",
     "packageUse": "Utiliser une séance du forfait",
-    "ticketPreview": "Aperçu du ticket"
+    "ticketPreview": "Aperçu du ticket",
+    "receipt": "Reçu",
+    "receiptNumber": "Reçu n° {number}",
+    "noFiscalValue": "SANS VALEUR FISCALE",
+    "noFiscalValueNote": "Document interne. Ne remplace pas une facture avec NCF auprès de la DGII.",
+    "noSequenceWarning": "Aucune séquence NCF active : l'encaissement sera enregistré comme reçu sans valeur fiscale.",
+    "issueWithoutNcf": "Émettre un reçu",
+    "issuedReceipt": "Reçu n° {number} émis, sans valeur fiscale.",
+    "shareTextReceipt": "Bonjour {client}, voici votre reçu de {studio}. N° {number}. Total {total}. Merci !"
   },
   "ncf": {
     "title": "Séquences NCF",
@@ -443,6 +453,8 @@
       "B01": "Crédit fiscal — pour les clientes avec RNC",
       "B02": "Consommateur final — le cas courant",
       "E_CF": "Comprobante électronique"
-    }
+    },
+    "emptyOptional": "Aucune séquence enregistrée. Les encaissements sortent en reçus sans valeur fiscale.",
+    "blocked": "Aucune séquence enregistrée et les encaissements sans NCF sont désactivés : facturation impossible."
   }
 }

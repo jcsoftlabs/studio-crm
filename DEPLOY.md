@@ -36,8 +36,13 @@ SEED_OWNER_EMAIL="…" SEED_OWNER_PASSWORD="…" npm run db:bootstrap
 ## 3. À faire dans l'application, dans cet ordre
 
 1. **Paramètres** — nom, RNC, adresse, horaires, ITBIS, largeur d'impression.
-2. **Paramètres → Séquences NCF** — saisir les séquences réelles de la DGII.
-   Sans séquence active, **aucune facture ne peut être émise**.
+2. **Paramètres → Séquences NCF** — dès que la DGII a délivré les numéros.
+   Tant qu'aucune séquence n'est active, la caisse fonctionne : les encaissements
+   sortent en **reçus numérotés portant la mention « sans valeur fiscale »**, et
+   non en factures. Dès qu'une séquence est saisie, les NCF reprennent
+   automatiquement. Le réglage « Autoriser les encaissements sans NCF » est activé
+   par défaut : **le désactiver une fois l'enregistrement DGII finalisé**, pour
+   qu'une séquence oubliée bloque la caisse au lieu de produire des reçus.
 3. **Employées** — noms, couleurs, horaires.
 4. **Services** — catégories et prestations, en espagnol et en français.
 

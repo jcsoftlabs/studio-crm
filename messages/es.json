@@ -121,13 +121,15 @@
       "defaultLocale": "Idioma por defecto",
       "timezone": "Zona horaria",
       "openMinute": "Apertura",
-      "closeMinute": "Cierre"
+      "closeMinute": "Cierre",
+      "allowSalesWithoutNcf": "Permitir cobros sin NCF"
     },
     "hints": {
       "rnc": "Necesario para emitir facturas con NCF válidos.",
       "itbisRate": "18 % en República Dominicana.",
       "printerWidthMm": "80 mm para la impresora térmica del mostrador.",
-      "usdRate": "No se convierte nada automáticamente; solo se muestra."
+      "usdRate": "No se convierte nada automáticamente; solo se muestra.",
+      "allowSalesWithoutNcf": "Mientras el registro ante la DGII está en curso. Desactívalo al recibir las secuencias."
     }
   },
   "clients": {
@@ -424,7 +426,15 @@
     },
     "giftCardCode": "Código del bono",
     "packageUse": "Usar una sesión del paquete",
-    "ticketPreview": "Vista del ticket"
+    "ticketPreview": "Vista del ticket",
+    "receipt": "Recibo",
+    "receiptNumber": "Recibo N° {number}",
+    "noFiscalValue": "SIN VALOR FISCAL",
+    "noFiscalValueNote": "Documento interno. No sustituye una factura con NCF ante la DGII.",
+    "noSequenceWarning": "Ninguna secuencia NCF activa: el cobro se registrará como recibo sin valor fiscal.",
+    "issueWithoutNcf": "Emitir un recibo",
+    "issuedReceipt": "Recibo N° {number} emitido, sin valor fiscal.",
+    "shareTextReceipt": "Hola {client}, aquí está su recibo de {studio}. N° {number}. Total {total}. ¡Gracias!"
   },
   "ncf": {
     "title": "Secuencias NCF",
@@ -443,6 +453,8 @@
       "B01": "Crédito fiscal — para clientas con RNC",
       "B02": "Consumidor final — el caso habitual",
       "E_CF": "Comprobante electrónico"
-    }
+    },
+    "emptyOptional": "Ninguna secuencia registrada. Los cobros se emiten como recibos sin valor fiscal.",
+    "blocked": "Ninguna secuencia registrada y los cobros sin NCF están desactivados: no se puede facturar."
   }
 }

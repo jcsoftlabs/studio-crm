@@ -41,6 +41,7 @@ const schema = z.object({
   printerWidthMm: z.number().int().min(40).max(120),
   ncfLowThreshold: z.number().int().min(0).max(100000),
   ncfExpiryWarningDays: z.number().int().min(0).max(365),
+  allowSalesWithoutNcf: z.boolean(),
   defaultLocale: z.nativeEnum(AppLocale),
   timezone: z.string().trim().min(1).max(64),
 });
@@ -90,6 +91,7 @@ export async function updateStudioSettings(
     printerWidthMm: intField(formData, 'printerWidthMm', 80),
     ncfLowThreshold: intField(formData, 'ncfLowThreshold', 50),
     ncfExpiryWarningDays: intField(formData, 'ncfExpiryWarningDays', 30),
+    allowSalesWithoutNcf: formData.get('allowSalesWithoutNcf') !== 'off',
     defaultLocale: formData.get('defaultLocale') ?? 'es',
     timezone: formData.get('timezone') ?? 'America/Santo_Domingo',
   });
@@ -140,7 +142,8 @@ export async function updateStudioSettings(
         after: JSON.parse(JSON.stringify(after)),
       },
     });
-  });
+    // Base distante : le défaut de 5 s ne suffit pas pour sept upserts d'horaires.
+  }, { timeout: 20_000, maxWait: 10_000 });
 
   revalidatePath('/', 'layout');
   return { ok: true };

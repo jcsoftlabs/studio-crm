@@ -72,6 +72,10 @@ model StudioSettings {
   ncfLowThreshold      Int @default(50)
   ncfExpiryWarningDays Int @default(30)
 
+  /// Le studio peut encaisser avant d'avoir ses séquences DGII. À désactiver
+  /// dès que l'enregistrement est finalisé.
+  allowSalesWithoutNcf Boolean @default(true)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -404,11 +408,16 @@ model Invoice {
   appointment   Appointment? @relation(fields: [appointmentId], references: [id])
   appointmentId String?
 
-  /// Unique : deux factures ne peuvent jamais porter le même comprobante.
-  ncf        String        @unique
-  ncfType    NcfType
-  sequence   NcfSequence   @relation(fields: [sequenceId], references: [id])
-  sequenceId String
+  /// Numéro interne, présent sur tout document, avec ou sans NCF.
+  number Int @unique @default(autoincrement())
+
+  /// Nul tant que la DGII n'a pas délivré de séquence : le document est alors un
+  /// reçu sans valeur fiscale. Unique quand il est renseigné (Postgres traite les
+  /// NULL comme distincts), deux factures ne portent jamais le même comprobante.
+  ncf        String?      @unique
+  ncfType    NcfType?
+  sequence   NcfSequence? @relation(fields: [sequenceId], references: [id])
+  sequenceId String?
 
   subtotalCents Int
   discountCents Int @default(0)

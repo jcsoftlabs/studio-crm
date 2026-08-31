@@ -46,10 +46,12 @@ export default async function InvoicePage({
 
   // La facture part vers la cliente : le texte suit sa langue, pas l'interface.
   const clientLocale = invoice.client?.locale ?? invoice.locale;
-  const shareText = fillTemplate(await getTemplate(clientLocale, 'facture.shareText'), {
+  const templateKey = invoice.ncf ? 'facture.shareText' : 'facture.shareTextReceipt';
+  const shareText = fillTemplate(await getTemplate(clientLocale, templateKey), {
     client: invoice.client?.firstName ?? '',
     studio: settings.name.trim() || 'el studio',
-    ncf: invoice.ncf,
+    ncf: invoice.ncf ?? '',
+    number: String(invoice.number),
     total: money(invoice.totalCents),
   });
 
@@ -89,9 +91,19 @@ export default async function InvoicePage({
           </div>
 
           <div className="border-y border-border py-2 text-sm">
-            <p className="font-semibold">
-              {t('ncf')} {invoice.ncf}
-            </p>
+            {invoice.ncf ? (
+              <p className="font-semibold">
+                {t('ncf')} {invoice.ncf}
+              </p>
+            ) : (
+              <>
+                <p className="font-semibold">{t('receiptNumber', { number: invoice.number })}</p>
+                <p className="pt-1">
+                  <Badge variant="destructive">{t('noFiscalValue')}</Badge>
+                </p>
+                <p className="text-xs text-muted-foreground">{t('noFiscalValueNote')}</p>
+              </>
+            )}
             <p>
               {t('issuedAt')}{' '}
               {formatInStudioTz(invoice.issuedAt, 'd MMMM yyyy HH:mm', appLocale, settings.timezone)}

@@ -6,7 +6,8 @@ import { displayName } from '@/lib/clients';
 import type { StudioSettingsWithHours } from '@/lib/settings';
 
 export type TicketInvoice = {
-  ncf: string;
+  number: number;
+  ncf: string | null;
   issuedAt: Date;
   status: InvoiceStatus;
   voidReason: string | null;
@@ -66,9 +67,16 @@ export async function InvoiceTicket({
 
         <Separator />
 
-        <p className="font-bold">
-          {t('ncf')} {invoice.ncf}
-        </p>
+        {invoice.ncf ? (
+          <p className="font-bold">
+            {t('ncf')} {invoice.ncf}
+          </p>
+        ) : (
+          <>
+            <p className="font-bold">{t('receiptNumber', { number: invoice.number })}</p>
+            <p className="font-bold">*** {t('noFiscalValue')} ***</p>
+          </>
+        )}
         <p>
           {t('issuedAt')}{' '}
           {formatInStudioTz(invoice.issuedAt, 'dd/MM/yyyy HH:mm', locale, settings.timezone)}
@@ -126,6 +134,9 @@ export async function InvoiceTicket({
           <p className="text-center">
             {locale === 'es' ? settings.invoiceFooterEs : settings.invoiceFooterFr}
           </p>
+        ) : null}
+        {!invoice.ncf ? (
+          <p className="pt-1 text-center">{t('noFiscalValueNote')}</p>
         ) : null}
         <p className="pt-1 text-center">{t('thanks')}</p>
       </div>

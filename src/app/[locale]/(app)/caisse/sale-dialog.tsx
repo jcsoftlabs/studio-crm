@@ -38,6 +38,7 @@ export function SaleDialog({
   appointments,
   itbisRateBp,
   currencySymbol,
+  activeNcfTypes,
   preset,
 }: {
   clients: Option[];
@@ -46,6 +47,8 @@ export function SaleDialog({
   appointments: PendingAppointment[];
   itbisRateBp: number;
   currencySymbol: string;
+  /// Types pour lesquels la DGII a délivré une séquence encore active.
+  activeNcfTypes: NcfType[];
   preset?: PendingAppointment;
 }) {
   const t = useTranslations('facture');
@@ -63,8 +66,11 @@ export function SaleDialog({
     { method: PaymentMethod.CASH, amount: '', reference: '' },
   ]);
   const [error, setError] = useState<string | null>(null);
-  const [issued, setIssued] = useState<string | null>(null);
+  const [issued, setIssued] = useState<{ ncf?: string; number?: number } | null>(null);
   const [pending, startTransition] = useTransition();
+
+  // Sans séquence active, l'encaissement sort en reçu : il faut le dire avant.
+  const willBeReceipt = !activeNcfTypes.includes(ncfType);
 
   const totals = useMemo(() => computeTotals(lines, itbisRateBp), [lines, itbisRateBp]);
   const paid = payments.reduce((sum, row) => sum + (parseMoneyToCents(row.amount) ?? 0), 0);
@@ -112,7 +118,7 @@ export function SaleDialog({
         setError(result.error);
         return;
       }
-      setIssued(result.ncf ?? null);
+      setIssued({ ncf: result.ncf, number: result.documentNumber });
       if (result.invoiceId) router.push(`/caisse/factures/${result.invoiceId}`);
     });
   }
@@ -186,6 +192,15 @@ export function SaleDialog({
               </Select>
             </div>
           </div>
+
+          {willBeReceipt ? (
+            <p
+              role="status"
+              className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm"
+            >
+              {t('noSequenceWarning')}
+            </p>
+          ) : null}
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="addService">{t('lines')}</Label>
@@ -405,7 +420,11 @@ export function SaleDialog({
             </p>
           ) : null}
           {issued ? (
-            <p className="text-sm text-muted-foreground">{t('issued', { ncf: issued })}</p>
+            <p className="text-sm text-muted-foreground">
+              {issued.ncf
+                ? t('issued', { ncf: issued.ncf })
+                : t('issuedReceipt', { number: issued.number ?? 0 })}
+            </p>
           ) : null}
 
           <Button
@@ -413,7 +432,7 @@ export function SaleDialog({
             disabled={pending || lines.length === 0 || balance > 0}
             onClick={submit}
           >
-            {pending ? tc('saving') : t('issue')}
+            {pending ? tc('saving') : willBeReceipt ? t('issueWithoutNcf') : t('issue')}
           </Button>
         </div>
       </DialogContent>

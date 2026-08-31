@@ -20,7 +20,14 @@ import { allocateNcf, NcfError } from '@/lib/ncf';
 import { echoForm, type FormEcho } from '@/lib/form-echo';
 
 export type CashState = { ok?: boolean; error?: string; echo?: FormEcho };
-export type InvoiceState = { ok?: boolean; error?: string; ncf?: string; invoiceId?: string };
+export type InvoiceState = {
+  ok?: boolean;
+  error?: string;
+  ncf?: string;
+  /// Numéro interne, seul identifiant quand aucun NCF n'est attribué.
+  documentNumber?: number;
+  invoiceId?: string;
+};
 
 const CASH_ROLES = [Role.OWNER, Role.RECEPTION] as const;
 
@@ -201,86 +208,111 @@ export async function issueInvoice(input: {
     ? await prisma.client.findUnique({ where: { id: input.clientId }, select: { id: true } })
     : null;
 
+  // Tant que l'enregistrement DGII n'est pas finalisé, le studio encaisse sans
+  // NCF : le document devient un reçu sans valeur fiscale, jamais une facture.
+  // Une séquence épuisée ou expirée reste bloquante : le studio est enregistré,
+  // il doit demander de nouveaux numéros, pas basculer en reçu en douce.
+  const activeSequence = await prisma.ncfSequence.findFirst({
+    where: { type: input.ncfType, active: true },
+    select: { id: true },
+  });
+
+  if (!activeSequence && !settings.allowSalesWithoutNcf) {
+    return { error: 'noSequence' };
+  }
+
+  // Les bons cadeaux sont validés hors transaction : chaque aller-retour vers une
+  // base distante compte contre le délai d'expiration de la transaction.
+  const giftCards = new Map<string, { id: string; balanceCents: number }>();
+  for (const payment of giftCardPayments) {
+    const code = payment.reference.trim().toUpperCase();
+    const card = await prisma.giftCard.findUnique({ where: { code } });
+    if (!card || !card.active || card.balanceCents < payment.amountCents) {
+      return { error: 'giftCardInvalid' };
+    }
+    giftCards.set(code, { id: card.id, balanceCents: card.balanceCents });
+  }
+
   try {
-    const invoice = await prisma.$transaction(async (tx) => {
-      // Verrou sur la séquence : deux caisses concurrentes ne peuvent pas
-      // obtenir le même numéro (§4).
-      const { ncf, sequenceId } = await allocateNcf(tx, input.ncfType);
+    const invoice = await prisma.$transaction(
+      async (tx) => {
+        // Verrou sur la séquence : deux caisses concurrentes ne peuvent pas
+        // obtenir le même numéro (§4).
+        const allocated = activeSequence ? await allocateNcf(tx, input.ncfType) : null;
 
-      const giftCards = new Map<string, { id: string; balanceCents: number }>();
-      for (const payment of giftCardPayments) {
-        const code = payment.reference.trim().toUpperCase();
-        const card = await tx.giftCard.findUnique({ where: { code } });
-        if (!card || !card.active || card.balanceCents < payment.amountCents) {
-          throw new Error('giftCardInvalid');
-        }
-        giftCards.set(code, { id: card.id, balanceCents: card.balanceCents });
-      }
-
-      const created = await tx.invoice.create({
-        data: {
-          clientId: client?.id ?? null,
-          appointmentId: input.appointmentId,
-          ncf,
-          ncfType: input.ncfType,
-          sequenceId,
-          subtotalCents: totals.subtotalCents,
-          discountCents: totals.discountCents,
-          itbisCents: totals.itbisCents,
-          totalCents: totals.totalCents,
-          itbisRateBp: settings.itbisRateBp,
-          cashSessionId: session.id,
-          createdBy: user?.id ?? null,
-          locale: settings.defaultLocale,
-          lines: {
-            create: parsedLines.data.map((line, index) => ({
-              description: line.description,
-              serviceId: line.serviceId,
-              employeeId: line.employeeId,
-              quantity: line.quantity,
-              unitPriceCents: line.unitPriceCents,
-              discountCents: line.discountCents,
-              totalCents: Math.max(0, line.quantity * line.unitPriceCents - line.discountCents),
-              order: index,
-            })),
-          },
-        },
-      });
-
-      for (const payment of parsedPayments.data) {
-        const code = payment.reference.trim().toUpperCase();
-        const card = payment.method === PaymentMethod.GIFT_CARD ? giftCards.get(code) : undefined;
-
-        await tx.payment.create({
+        const created = await tx.invoice.create({
           data: {
-            invoiceId: created.id,
-            method: payment.method,
-            amountCents: payment.amountCents,
-            reference: payment.reference || null,
-            giftCardId: card?.id ?? null,
+            clientId: client?.id ?? null,
+            appointmentId: input.appointmentId,
+            ncf: allocated?.ncf ?? null,
+            ncfType: allocated ? input.ncfType : null,
+            sequenceId: allocated?.sequenceId ?? null,
+            subtotalCents: totals.subtotalCents,
+            discountCents: totals.discountCents,
+            itbisCents: totals.itbisCents,
+            totalCents: totals.totalCents,
+            itbisRateBp: settings.itbisRateBp,
+            cashSessionId: session.id,
+            createdBy: user?.id ?? null,
+            locale: settings.defaultLocale,
+            lines: {
+              create: parsedLines.data.map((line, index) => ({
+                description: line.description,
+                serviceId: line.serviceId,
+                employeeId: line.employeeId,
+                quantity: line.quantity,
+                unitPriceCents: line.unitPriceCents,
+                discountCents: line.discountCents,
+                totalCents: Math.max(0, line.quantity * line.unitPriceCents - line.discountCents),
+                order: index,
+              })),
+            },
+            payments: {
+              create: parsedPayments.data.map((payment) => {
+                const code = payment.reference.trim().toUpperCase();
+                const card =
+                  payment.method === PaymentMethod.GIFT_CARD ? giftCards.get(code) : undefined;
+                return {
+                  method: payment.method,
+                  amountCents: payment.amountCents,
+                  reference: payment.reference || null,
+                  giftCardId: card?.id ?? null,
+                };
+              }),
+            },
           },
         });
 
-        if (card) {
+        for (const [, card] of giftCards) {
+          const used = parsedPayments.data
+            .filter((payment) => payment.method === PaymentMethod.GIFT_CARD)
+            .reduce((sum, payment) => sum + payment.amountCents, 0);
           await tx.giftCard.update({
             where: { id: card.id },
-            data: { balanceCents: card.balanceCents - payment.amountCents },
+            data: { balanceCents: card.balanceCents - used },
           });
         }
-      }
 
-      if (input.appointmentId) {
-        await tx.appointment.update({
-          where: { id: input.appointmentId },
-          data: { status: AppointmentStatus.DONE },
-        });
-      }
+        if (input.appointmentId) {
+          await tx.appointment.update({
+            where: { id: input.appointmentId },
+            data: { status: AppointmentStatus.DONE },
+          });
+        }
 
-      return created;
-    });
+        return created;
+      },
+      // Base distante : le défaut de 5 s ne suffit pas au premier appel à froid.
+      { timeout: 20_000, maxWait: 10_000 },
+    );
 
     revalidatePath('/caisse', 'layout');
-    return { ok: true, ncf: invoice.ncf, invoiceId: invoice.id };
+    return {
+      ok: true,
+      ncf: invoice.ncf ?? undefined,
+      documentNumber: invoice.number,
+      invoiceId: invoice.id,
+    };
   } catch (error) {
     if (error instanceof NcfError) return { error: error.reason };
     if (error instanceof Error && error.message === 'giftCardInvalid') {

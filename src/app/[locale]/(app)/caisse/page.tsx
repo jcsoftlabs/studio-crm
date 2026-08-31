@@ -57,7 +57,7 @@ export default async function CaissePage({ params }: { params: Promise<{ locale:
     },
   });
 
-  const [employees, clients, services, closedSessions] = await Promise.all([
+  const [employees, clients, services, closedSessions, activeSequences] = await Promise.all([
     prisma.employee.findMany({
       where: { deletedAt: null, active: true },
       orderBy: { order: 'asc' },
@@ -78,6 +78,7 @@ export default async function CaissePage({ params }: { params: Promise<{ locale:
       take: 5,
       include: { employee: { select: { name: true } } },
     }),
+    prisma.ncfSequence.findMany({ where: { active: true }, select: { type: true } }),
   ]);
 
   const today = todayInStudio(settings.timezone);
@@ -138,6 +139,7 @@ export default async function CaissePage({ params }: { params: Promise<{ locale:
               appointments={pendingOptions}
               itbisRateBp={settings.itbisRateBp}
               currencySymbol={settings.currencySymbol}
+              activeNcfTypes={[...new Set(activeSequences.map((sequence) => sequence.type))]}
             />
             <MovementDialog />
             <CloseSessionDialog
@@ -178,7 +180,10 @@ export default async function CaissePage({ params }: { params: Promise<{ locale:
                     <li key={invoice.id} className="flex items-center gap-3 py-2.5">
                       <div className="min-w-0 flex-1">
                         <p className="flex items-center gap-2 truncate font-medium">
-                          {invoice.ncf}
+                          {invoice.ncf ?? tf('receiptNumber', { number: invoice.number })}
+                          {!invoice.ncf ? (
+                            <Badge variant="muted">{tf('noFiscalValue')}</Badge>
+                          ) : null}
                           {invoice.status === InvoiceStatus.VOIDED ? (
                             <Badge variant="destructive">{tf('voided')}</Badge>
                           ) : null}

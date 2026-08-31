@@ -43,6 +43,7 @@ export function SettingsForm({ settings }: { settings: StudioSettingsWithHours }
   const locale = useLocale() as AppLocale;
   const [state, action, pending] = useActionState<SettingsState, FormData>(updateStudioSettings, {});
   const [showUsd, setShowUsd] = useState(settings.showUsd);
+  const [allowWithoutNcf, setAllowWithoutNcf] = useState(settings.allowSalesWithoutNcf);
   const [closedDays, setClosedDays] = useState<Record<number, boolean>>(
     Object.fromEntries(settings.businessHours.map((h) => [h.weekday, h.closed])),
   );
@@ -132,6 +133,21 @@ export function SettingsForm({ settings }: { settings: StudioSettingsWithHours }
             inputMode="numeric"
             defaultValue={dv('ncfExpiryWarningDays', String(settings.ncfExpiryWarningDays))}
           />
+          <div className="flex flex-col gap-1.5 sm:col-span-2">
+            <div className="flex items-center gap-3">
+              <Switch
+                id="allowSalesWithoutNcf"
+                name="allowSalesWithoutNcf"
+                checked={allowWithoutNcf}
+                onCheckedChange={setAllowWithoutNcf}
+              />
+              <Label htmlFor="allowSalesWithoutNcf">{f('allowSalesWithoutNcf')}</Label>
+              {!allowWithoutNcf ? (
+                <input type="hidden" name="allowSalesWithoutNcf" value="off" />
+              ) : null}
+            </div>
+            <p className="text-xs text-muted-foreground">{t('hints.allowSalesWithoutNcf')}</p>
+          </div>
           <Field
             name="invoiceFooterEs"
             label={`${f('invoiceFooter')} (ES)`}

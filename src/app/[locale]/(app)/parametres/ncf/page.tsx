@@ -61,7 +61,15 @@ export default async function NcfPage({ params }: { params: Promise<{ locale: st
 
       {sequences.length === 0 ? (
         <Card>
-          <CardContent className="pt-5 text-sm text-destructive">{t('empty')}</CardContent>
+          <CardContent
+            className={
+              settings.allowSalesWithoutNcf
+                ? 'pt-5 text-sm text-muted-foreground'
+                : 'pt-5 text-sm text-destructive'
+            }
+          >
+            {settings.allowSalesWithoutNcf ? t('emptyOptional') : t('blocked')}
+          </CardContent>
         </Card>
       ) : (
         <ul className="flex flex-col gap-2">

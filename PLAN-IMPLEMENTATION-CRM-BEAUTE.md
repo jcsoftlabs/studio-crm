@@ -315,6 +315,24 @@ et consécutifs, aucun doublon.
 - Vérifié : ticket mesuré à 302 px = 80 mm exactement, puis 219 px = 58 mm après changement du
   réglage ; rendu papier simulé sans chrome, en noir sur blanc.
 
+**Ajout après coup — NCF facultatif (enregistrement DGII en cours)** :
+- `Invoice.ncf`, `ncfType` et `sequenceId` deviennent **nullables**, et un
+  `Invoice.number` séquentiel identifie **tout** document, avec ou sans NCF.
+- Sans séquence active, l'encaissement produit un **reçu portant « SANS VALEUR FISCALE »**
+  et la mention « ne remplace pas une facture avec NCF auprès de la DGII ». Le dialogue de
+  caisse avertit avant émission et le bouton devient « Émettre un reçu ».
+- Une séquence **épuisée ou expirée reste bloquante** : le studio est enregistré, il doit
+  demander de nouveaux numéros — pas basculer en reçu en douce.
+- `StudioSettings.allowSalesWithoutNcf` (vrai par défaut) : à désactiver une fois
+  l'enregistrement finalisé.
+- Vérifié : reçu n° 1 sans NCF, puis facture n° 2 en `B0200000001` après réactivation de la
+  séquence, numérotation interne continue entre les deux.
+
+**Bug trouvé au passage** : la transaction d'émission dépassait le **délai de 5 s de Prisma**
+(6,4 s mesurées) — trop d'allers-retours vers une base distante. Les bons cadeaux sont désormais
+validés hors transaction, les lignes et règlements créés en une seule écriture imbriquée, et le
+délai porté à 20 s. Même correction sur l'enregistrement des Paramètres (sept upserts d'horaires).
+
 **Dette relevée** : le Postgres hébergé refuse les connexions au-delà de son quota
 (`FATAL: sorry, too many clients already`) — constaté à 12 transactions parallèles. `connection_limit`
 est documenté dans `.env.example` et **doit être posé sur Vercel avant la mise en production**.
