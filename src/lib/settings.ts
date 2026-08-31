@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db';
 export const SETTINGS_ID = 'singleton';
 
 const DEFAULT_HOURS = [
-  { weekday: 0, closed: true, openMinute: 540, closeMinute: 1080 },
+  { weekday: 0, closed: false, openMinute: 540, closeMinute: 1080 },
   { weekday: 1, closed: false, openMinute: 540, closeMinute: 1080 },
   { weekday: 2, closed: false, openMinute: 540, closeMinute: 1080 },
   { weekday: 3, closed: false, openMinute: 540, closeMinute: 1080 },

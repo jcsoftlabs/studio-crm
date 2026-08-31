@@ -29,6 +29,7 @@ export function BottomNav({ role }: { role: Role }) {
             key={key}
             href={href}
             aria-current={active ? 'page' : undefined}
+            prefetch={false}
             className={cn(
               'flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px]',
               active ? 'text-primary' : 'text-muted-foreground',
@@ -49,7 +50,7 @@ export function BottomNav({ role }: { role: Role }) {
           <DropdownMenuContent align="end" side="top">
             {secondary.map(({ key, href, icon: Icon }) => (
               <DropdownMenuItem key={key} asChild>
-                <Link href={href}>
+                <Link href={href} prefetch={false}>
                   <Icon className="size-4" aria-hidden />
                   {t(`nav.${key}`)}
                 </Link>

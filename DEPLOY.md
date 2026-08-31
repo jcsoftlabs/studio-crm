@@ -6,16 +6,45 @@
 
 | Variable | Valeur | Obligatoire |
 |---|---|---|
-| `DATABASE_URL` | l'URL Postgres **avec `?sslmode=require&connection_limit=1`** | oui |
+| `DATABASE_URL` | l'URL **du pooler**, avec `?sslmode=require&connection_limit=1` | oui |
 | `AUTH_SECRET` | `openssl rand -base64 32` | oui |
 | `BLOB_READ_WRITE_TOKEN` | Vercel → Storage → Blob → Connect | oui pour les photos |
 
 **Ne pas définir `AUTH_URL`.** Avec `trustHost`, l'hôte est déduit de la requête ;
 une valeur figée renvoie toutes les redirections de connexion sur ce domaine-là.
 
-**`connection_limit=1` n'est pas décoratif.** Chaque fonction serverless ouvre son
-propre pool ; sans cette limite le fournisseur répond
-`FATAL: sorry, too many clients already` dès la première pointe.
+### Le pooler n'est pas optionnel
+
+Le service a **15 connexions au total**. Mesuré en production : les fonctions Vercel
+en retenaient **9 à elles seules, toutes inactives**. Sans pooler, l'application tombe
+dès que quelques instances sont tièdes.
+
+Console Aiven → service → **Pools** → *Create pool* :
+
+| Champ | Valeur |
+|---|---|
+| Database | `defaultdb` |
+| Username | `avnadmin` |
+| Pool mode | **`transaction`** |
+| Pool size | 10 |
+
+Copier ensuite le **Service URI du pool** (port différent de celui de la base) et
+y ajouter `?sslmode=require&pgbouncer=true&connection_limit=1`.
+
+**`pgbouncer=true` est obligatoire** : en mode `transaction`, Prisma doit désactiver
+ses requêtes préparées. Sans ce paramètre, les erreurs sont erratiques et illisibles.
+
+Le verrou `SELECT ... FOR UPDATE` des NCF reste correct derrière ce pooler : en mode
+`transaction`, une transaction entière tient sur une même connexion serveur.
+
+**`connection_limit=1` reste nécessaire** par-dessus. L'application la pose déjà
+elle-même quand l'URL ne la contient pas (`src/lib/db.ts`), pour qu'une variable
+oubliée ne mette pas le studio à l'arrêt — mais la poser dans l'URL reste préférable,
+c'est explicite.
+
+**Symptôme d'un pooler manquant** : `FATAL: sorry, too many clients already` ou
+`remaining connection slots are reserved for roles with the SUPERUSER attribute`,
+sur n'importe quelle page, de façon intermittente.
 
 ## 2. Premier démarrage
 

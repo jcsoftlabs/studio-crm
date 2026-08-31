@@ -13,7 +13,7 @@ import { echoForm, type FormEcho } from '@/lib/form-echo';
 export type StaffState = { ok?: boolean; error?: string; echo?: FormEcho };
 
 const DEFAULT_HOURS = [
-  { weekday: 0, closed: true, openMinute: 540, closeMinute: 1080 },
+  { weekday: 0, closed: false, openMinute: 540, closeMinute: 1080 },
   { weekday: 1, closed: false, openMinute: 540, closeMinute: 1080 },
   { weekday: 2, closed: false, openMinute: 540, closeMinute: 1080 },
   { weekday: 3, closed: false, openMinute: 540, closeMinute: 1080 },

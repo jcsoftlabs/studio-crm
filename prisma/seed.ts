@@ -8,7 +8,7 @@ const OWNER_PASSWORD = process.env.SEED_OWNER_PASSWORD ?? 'Studio2026!';
 const OWNER_NAME = process.env.SEED_OWNER_NAME ?? 'Propietaria';
 
 const DEFAULT_HOURS = [
-  { weekday: 0, closed: true, openMinute: 540, closeMinute: 1080 },
+  { weekday: 0, closed: false, openMinute: 540, closeMinute: 1080 },
   { weekday: 1, closed: false, openMinute: 540, closeMinute: 1080 },
   { weekday: 2, closed: false, openMinute: 540, closeMinute: 1080 },
   { weekday: 3, closed: false, openMinute: 540, closeMinute: 1080 },
@@ -219,7 +219,7 @@ const EMPLOYEES = [
 ];
 
 const EMPLOYEE_HOURS = [
-  { weekday: 0, closed: true, openMinute: 540, closeMinute: 1080 },
+  { weekday: 0, closed: false, openMinute: 540, closeMinute: 1080 },
   { weekday: 1, closed: false, openMinute: 540, closeMinute: 1080 },
   { weekday: 2, closed: false, openMinute: 540, closeMinute: 1080 },
   { weekday: 3, closed: false, openMinute: 540, closeMinute: 1080 },
