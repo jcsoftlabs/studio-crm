@@ -104,7 +104,15 @@
     "alertNoNcf": "Ninguna secuencia NCF: se emiten recibos sin valor fiscal",
     "alertReminders": "{count} recordatorio(s) por enviar para mañana",
     "alertWaitlist": "{count} clienta(s) en lista de espera",
-    "openAgenda": "Ver la agenda"
+    "openAgenda": "Ver la agenda",
+    "revenue14": "Ingresos de los últimos 14 días",
+    "byEmployee30": "Por empleada, 30 días",
+    "byService30": "Servicios más vendidos, 30 días",
+    "occupancyToday": "Ocupación de hoy",
+    "occupancyHint": "{booked} min reservados sobre {available} min laborables.",
+    "showData": "Ver los datos",
+    "noData": "Ningún dato en este periodo.",
+    "amount": "Monto"
   },
   "parametres": {
     "title": "Ajustes",

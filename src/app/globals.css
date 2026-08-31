@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 
-@custom-variant dark (&:where(.dark, .dark *));
+/* Le mode sombre suit la préférence du système : rien dans l'application
+   n'ajoutait la classe `.dark`, les jetons sombres n'étaient jamais appliqués. */
+@custom-variant dark (@media (prefers-color-scheme: dark));
 
 :root {
   --background: oklch(0.995 0.004 340);
@@ -19,9 +21,16 @@
   --input: oklch(0.91 0.008 340);
   --ring: oklch(0.58 0.14 350);
   --radius: 0.75rem;
+
+  /* Teinte des graphiques, validée par le validateur de palette :
+     bande de clarté, plancher de chroma et contraste sur la surface. */
+  --chart-series: #b55386;
+  --chart-track: oklch(0.93 0.01 340);
+  --chart-grid: oklch(0.9 0.008 340);
 }
 
-.dark {
+@media (prefers-color-scheme: dark) {
+  :root {
   --background: oklch(0.17 0.012 320);
   --foreground: oklch(0.96 0.006 340);
   --card: oklch(0.21 0.015 320);
@@ -37,6 +46,13 @@
   --border: oklch(0.3 0.015 320);
   --input: oklch(0.32 0.015 320);
   --ring: oklch(0.7 0.13 350);
+
+  /* Pas un simple éclaircissement : cette valeur est repassée au validateur
+     contre la surface sombre. */
+  --chart-series: #c9689b;
+  --chart-track: oklch(0.28 0.015 320);
+  --chart-grid: oklch(0.32 0.015 320);
+  }
 }
 
 @theme inline {
@@ -55,6 +71,9 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-chart-series: var(--chart-series);
+  --color-chart-track: var(--chart-track);
+  --color-chart-grid: var(--chart-grid);
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 0.25rem);
   --radius-sm: calc(var(--radius) - 0.4rem);

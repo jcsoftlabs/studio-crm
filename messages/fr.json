@@ -104,7 +104,15 @@
     "alertNoNcf": "Aucune séquence NCF : les encaissements sortent en reçus sans valeur fiscale",
     "alertReminders": "{count} relance(s) à envoyer pour demain",
     "alertWaitlist": "{count} cliente(s) en liste d'attente",
-    "openAgenda": "Voir l'agenda"
+    "openAgenda": "Voir l'agenda",
+    "revenue14": "Chiffre d'affaires des 14 derniers jours",
+    "byEmployee30": "Par employée, 30 jours",
+    "byService30": "Prestations les plus vendues, 30 jours",
+    "occupancyToday": "Occupation d'aujourd'hui",
+    "occupancyHint": "{booked} min réservées sur {available} min ouvrables.",
+    "showData": "Voir les données",
+    "noData": "Aucune donnée sur cette période.",
+    "amount": "Montant"
   },
   "parametres": {
     "title": "Paramètres",

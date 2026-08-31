@@ -10,6 +10,11 @@ import { formatMoney } from '@/lib/money';
 import { formatInStudioTz } from '@/lib/dates';
 import { addDaysToDay, localDayRange, todayInStudio } from '@/lib/agenda';
 import { isLow } from '@/lib/ncf';
+import { loadReport } from '@/lib/report-data';
+import { byEmployee, byService, occupancyRateBp } from '@/lib/reports';
+import { ColumnChart } from '@/components/charts/column-chart';
+import { RankedBars } from '@/components/charts/ranked-bars';
+import { Meter } from '@/components/charts/meter';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,6 +25,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
   const user = await requireUser(locale);
   const t = await getTranslations('dashboard');
   const ta = await getTranslations('agenda');
+  const tc = await getTranslations('common');
   const appLocale = locale as AppLocale;
 
   const settings = await getStudioSettings();
@@ -70,6 +76,18 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
       prisma.waitlistEntry.count({ where: { resolvedAt: null } }),
     ]);
 
+  // Minutes ouvrables du jour, d'après les horaires réels des employées actives.
+  // Une moyenne sur 30 jours donnerait des minutes ouvrables un dimanche fermé.
+  const weekday = new Date(`${today}T12:00:00Z`).getUTCDay();
+  const todaySchedules = await prisma.employeeSchedule.findMany({
+    where: { weekday, closed: false, employee: { deletedAt: null, active: true } },
+    select: { openMinute: true, closeMinute: true },
+  });
+  const availableToday = todaySchedules.reduce(
+    (sum, schedule) => sum + (schedule.closeMinute - schedule.openMinute),
+    0,
+  );
+
   const revenue = invoices.reduce((sum, invoice) => sum + invoice.subtotalCents, 0);
   const pending = appointments.filter(
     (appointment) =>
@@ -82,6 +100,54 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
     lowThreshold: settings.ncfLowThreshold,
     expiryWarningDays: settings.ncfExpiryWarningDays,
   };
+
+  // Graphiques : réservés aux rôles qui voient l'argent (§3.2).
+  //
+  // Une seule lecture de 30 jours alimente les trois visuels. Trois appels
+  // parallèles saturaient le quota de connexions du Postgres hébergé.
+  const showCharts = user.role !== Role.STYLIST;
+  const last14From = addDaysToDay(today, -13);
+  const last30From = addDaysToDay(today, -29);
+
+  const report = showCharts
+    ? await loadReport(last30From, today, settings.timezone, appLocale)
+    : null;
+
+  const revenueByDay =
+    report === null
+      ? []
+      : Array.from({ length: 14 }, (_, index) => {
+          const day = addDaysToDay(last14From, index);
+          const bucket = report.days.find((entry) => entry.key === day);
+          return {
+            key: day,
+            label: formatInStudioTz(new Date(`${day}T12:00:00Z`), 'd MMM', appLocale, 'UTC'),
+            value: bucket?.totalCents ?? 0,
+            valueLabel: money(bucket?.totalCents ?? 0),
+          };
+        });
+
+  const toRows = (buckets: { key: string; label: string; totalCents: number }[]) =>
+    buckets.slice(0, 6).map((bucket) => ({
+      key: bucket.key,
+      label: bucket.label,
+      value: bucket.totalCents,
+      valueLabel: money(bucket.totalCents),
+    }));
+
+  const employeeRows = report ? toRows(byEmployee(report.lines, report.employeeNames)) : [];
+  const serviceRows = report ? toRows(byService(report.lines)) : [];
+
+  // L'occupation du jour se calcule sur les rendez-vous déjà chargés plus haut :
+  // les minutes ouvrables viennent du rapport, ramenées à une journée.
+  const todayAppointments = appointments.map((appointment) => ({
+    status: appointment.status,
+    minutes: Math.round((appointment.endAt.getTime() - appointment.startAt.getTime()) / 60000),
+  }));
+  const occupancyBp = occupancyRateBp(todayAppointments, availableToday);
+  const bookedMinutes = todayAppointments
+    .filter((appointment) => appointment.status !== AppointmentStatus.CANCELLED)
+    .reduce((sum, appointment) => sum + appointment.minutes, 0);
 
   const alerts: string[] = [];
   if (lowCount > 0) alerts.push(t('alertLowStock', { count: lowCount }));
@@ -149,6 +215,69 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
             </ul>
           </CardContent>
         </Card>
+      ) : null}
+
+      {showCharts ? (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('revenue14')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ColumnChart
+                points={revenueByDay}
+                title={t('revenue14')}
+                emptyLabel={t('noData')}
+                tableLabel={t('showData')}
+                valueHeader={t('amount')}
+              />
+            </CardContent>
+          </Card>
+
+          <div className="grid gap-5 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('byEmployee30')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <RankedBars
+                  rows={employeeRows}
+                  title={t('byEmployee30')}
+                  emptyLabel={t('noData')}
+                  tableLabel={t('showData')}
+                  valueHeader={t('amount')}
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('byService30')}</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-5">
+                <RankedBars
+                  rows={serviceRows}
+                  title={t('byService30')}
+                  emptyLabel={t('noData')}
+                  tableLabel={t('showData')}
+                  valueHeader={t('amount')}
+                />
+                {availableToday > 0 ? (
+                  <Meter
+                    label={t('occupancyToday')}
+                    valueLabel={`${(occupancyBp / 100).toFixed(1)} %`}
+                    ratio={occupancyBp / 10000}
+                    hint={t('occupancyHint', { booked: bookedMinutes, available: availableToday })}
+                  />
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    {t('occupancyToday')} — {tc('closed')}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </>
       ) : null}
 
       <Card>

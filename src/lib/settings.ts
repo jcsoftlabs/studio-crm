@@ -12,27 +12,39 @@ const DEFAULT_HOURS = [
   { weekday: 6, closed: false, openMinute: 540, closeMinute: 1140 },
 ];
 
+/**
+ * Lecture d'abord. La création n'a lieu qu'au tout premier appel : écrire à
+ * chaque affichage de page coûtait huit allers-retours vers une base distante,
+ * sur toutes les pages du CRM.
+ */
 export async function getStudioSettings() {
+  const existing = await prisma.studioSettings.findUnique({
+    where: { id: SETTINGS_ID },
+    include: { businessHours: { orderBy: { weekday: 'asc' } } },
+  });
+
+  if (existing && existing.businessHours.length === DEFAULT_HOURS.length) return existing;
+
   await prisma.studioSettings.upsert({
     where: { id: SETTINGS_ID },
     update: {},
     create: { id: SETTINGS_ID },
   });
 
-  for (const hours of DEFAULT_HOURS) {
-    await prisma.businessHours.upsert({
-      where: { settingsId_weekday: { settingsId: SETTINGS_ID, weekday: hours.weekday } },
-      update: {},
-      create: { settingsId: SETTINGS_ID, ...hours },
+  const missing = DEFAULT_HOURS.filter(
+    (hours) => !existing?.businessHours.some((entry) => entry.weekday === hours.weekday),
+  );
+  if (missing.length > 0) {
+    await prisma.businessHours.createMany({
+      data: missing.map((hours) => ({ settingsId: SETTINGS_ID, ...hours })),
+      skipDuplicates: true,
     });
   }
 
-  const settings = await prisma.studioSettings.findUniqueOrThrow({
+  return prisma.studioSettings.findUniqueOrThrow({
     where: { id: SETTINGS_ID },
     include: { businessHours: { orderBy: { weekday: 'asc' } } },
   });
-
-  return settings;
 }
 
 export type StudioSettingsWithHours = Awaited<ReturnType<typeof getStudioSettings>>;
