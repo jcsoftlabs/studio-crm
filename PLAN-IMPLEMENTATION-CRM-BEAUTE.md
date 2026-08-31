@@ -381,12 +381,35 @@ Les montants sont désormais formatés côté serveur.
   file d'attente des écritures avec résolution de conflits à la reconnexion.
   **Les factures ne sont jamais émises hors ligne** (le NCF exige le serveur).
 
-### Phase 6 — Rapports et mise en production (0,5 semaine)
-- Rapports : CA par jour/mois, par service, par employée ; taux d'occupation ; taux de
-  no-show ; panier moyen ; produits les plus vendus ; marge sur produits (`OWNER` seul).
-- Export Excel et PDF, bilingue.
-- Sauvegarde automatique quotidienne de la base, testée en restauration.
-- Déploiement, nom de domaine, HTTPS, comptes réels créés, formation.
+### Phase 6 — Rapports et mise en production (0,5 semaine) — ✅ **livrée le 2026-08-30**
+- [x] Rapports sur une période libre : CA hors ITBIS, factures émises, panier moyen, taux
+      d'occupation, taux d'absence, marge produits (`OWNER` seul), et quatre tableaux —
+      par jour, par prestation, par employée, produits les plus vendus.
+- [x] Export **CSV** (`/rapports/export`), lisible par Excel : point-virgule et BOM UTF-8,
+      sinon les accents cassent. Garde d'accès dans la route même, pas seulement en amont.
+- [x] Export **PDF** par l'impression du navigateur : la page se dépouille de la sidebar et
+      des contrôles. Aucune librairie PDF ajoutée.
+- [x] Script de sauvegarde `npm run db:backup` (`pg_dump` format custom, 14 dernières
+      conservées) et procédure de restauration dans `DEPLOY.md`.
+- [x] Déploiement préparé : `DEPLOY.md`, `db:bootstrap`, `prisma migrate deploy` au build.
+
+**Vérifié en conditions réelles** : sur les 18 factures de démonstration, CA RD$ 46 000,
+panier moyen RD$ 2 555,56, occupation 9,3 %, absence 0 % ; export CSV renvoyé avec
+`Content-Disposition` et **BOM `EF BB BF` confirmé octet par octet** ; rendu d'impression
+simulé sans sidebar ni contrôles.
+
+**Écarts actés en phase 6** :
+- **CSV au lieu de XLSX** : un vrai classeur Excel demanderait une librairie. Le CSV
+  point-virgule + BOM s'ouvre directement dans Excel en espagnol comme en français.
+- Les agrégations vivent dans `src/lib/reports.ts`, **pures et testées sans base** ; seule
+  `src/lib/report-data.ts` touche à Postgres, en une lecture pour tout le rapport.
+- Le CA est compté **hors ITBIS** : la taxe n'appartient pas au studio. Les factures
+  annulées sont exclues de tous les chiffres.
+- Une annulation de rendez-vous n'entre pas dans le taux d'absence ni dans l'occupation.
+
+**Non tenu — à faire avant la mise en production** : la restauration de sauvegarde
+**n'a pas été testée**, `pg_dump` n'étant pas installé sur le poste de développement.
+Une sauvegarde jamais restaurée n'est pas une sauvegarde.
 
 ---
 

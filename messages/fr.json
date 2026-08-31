@@ -402,7 +402,28 @@
     "title": "Fidélité"
   },
   "rapports": {
-    "title": "Rapports"
+    "title": "Rapports",
+    "subtitle": "Activité du studio sur une période.",
+    "revenue": "Chiffre d'affaires (hors ITBIS)",
+    "invoices": "Factures émises",
+    "averageTicket": "Panier moyen",
+    "occupancy": "Taux d'occupation",
+    "noShow": "Taux d'absence",
+    "productMargin": "Marge sur produits",
+    "byDay": "Par jour",
+    "byService": "Par prestation",
+    "byEmployee": "Par employée",
+    "byProduct": "Produits les plus vendus",
+    "empty": "Aucune activité sur cette période.",
+    "exportCsv": "Exporter en CSV",
+    "exportPdf": "Imprimer / PDF",
+    "ownerOnly": "La marge n'est visible que par la propriétaire.",
+    "columns": {
+      "label": "Libellé",
+      "count": "Quantité",
+      "total": "Total",
+      "day": "Jour"
+    }
   },
   "errors": {
     "generic": "Une erreur est survenue. Réessayez.",

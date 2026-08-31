@@ -61,6 +61,7 @@ async function main() {
   await seedAppointments();
   await seedNcf();
   await seedStock();
+  await seedInvoices();
 }
 
 const CATEGORIES = [
@@ -417,4 +418,80 @@ async function seedStock() {
   }
 
   console.log(`Inventario : ${await prisma.product.count({ where: { deletedAt: null } })} productos`);
+}
+
+/** Factures de démonstration sur les rendez-vous déjà terminés, pour les rapports. */
+async function seedInvoices() {
+  const existing = await prisma.invoice.count();
+  if (existing > 0) {
+    console.log(`Facturas : ${existing} (ya sembradas)`);
+    return;
+  }
+
+  const sequence = await prisma.ncfSequence.findFirst({ where: { type: 'B02', active: true } });
+  const settings = await prisma.studioSettings.findUniqueOrThrow({ where: { id: 'singleton' } });
+  const session = await prisma.cashSession.create({
+    data: {
+      employeeId: (await prisma.employee.findFirstOrThrow({ where: { deletedAt: null } })).id,
+      openingCents: 200000,
+      closedAt: new Date(),
+      countedCents: 200000,
+      expectedCents: 200000,
+      differenceCents: 0,
+    },
+  });
+
+  const done = await prisma.appointment.findMany({
+    where: { status: 'DONE' },
+    include: { items: { include: { service: true } } },
+    take: 18,
+  });
+
+  let number = sequence?.currentNumber ?? 0;
+  let created = 0;
+
+  for (const appointment of done) {
+    if (appointment.items.length === 0) continue;
+    number += 1;
+
+    const subtotal = appointment.items.reduce((sum, item) => sum + item.priceCents, 0);
+    const itbis = Math.round((subtotal * settings.itbisRateBp) / 10000);
+
+    await prisma.invoice.create({
+      data: {
+        clientId: appointment.clientId,
+        appointmentId: appointment.id,
+        ncf: sequence ? `${sequence.prefix}${String(number).padStart(8, '0')}` : null,
+        ncfType: sequence ? 'B02' : null,
+        sequenceId: sequence?.id ?? null,
+        subtotalCents: subtotal,
+        itbisCents: itbis,
+        totalCents: subtotal + itbis,
+        itbisRateBp: settings.itbisRateBp,
+        issuedAt: appointment.endAt,
+        cashSessionId: session.id,
+        lines: {
+          create: appointment.items.map((item, index) => ({
+            description: item.service.nameEs,
+            serviceId: item.serviceId,
+            employeeId: item.employeeId,
+            quantity: 1,
+            unitPriceCents: item.priceCents,
+            totalCents: item.priceCents,
+            order: index,
+          })),
+        },
+        payments: {
+          create: [{ method: created % 3 === 0 ? 'CARD' : 'CASH', amountCents: subtotal + itbis }],
+        },
+      },
+    });
+    created += 1;
+  }
+
+  if (sequence) {
+    await prisma.ncfSequence.update({ where: { id: sequence.id }, data: { currentNumber: number } });
+  }
+
+  console.log(`Facturas : ${created}`);
 }

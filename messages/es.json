@@ -402,7 +402,28 @@
     "title": "Fidelidad"
   },
   "rapports": {
-    "title": "Informes"
+    "title": "Informes",
+    "subtitle": "Actividad del studio sobre un periodo.",
+    "revenue": "Ingresos (sin ITBIS)",
+    "invoices": "Facturas emitidas",
+    "averageTicket": "Ticket promedio",
+    "occupancy": "Ocupación",
+    "noShow": "Inasistencias",
+    "productMargin": "Margen sobre productos",
+    "byDay": "Por día",
+    "byService": "Por servicio",
+    "byEmployee": "Por empleada",
+    "byProduct": "Productos más vendidos",
+    "empty": "Ninguna actividad en este periodo.",
+    "exportCsv": "Exportar CSV",
+    "exportPdf": "Imprimir / PDF",
+    "ownerOnly": "El margen solo lo ve la propietaria.",
+    "columns": {
+      "label": "Concepto",
+      "count": "Cantidad",
+      "total": "Total",
+      "day": "Día"
+    }
   },
   "errors": {
     "generic": "Algo salió mal. Inténtalo de nuevo.",

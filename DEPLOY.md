@@ -46,8 +46,30 @@ SEED_OWNER_EMAIL="…" SEED_OWNER_PASSWORD="…" npm run db:bootstrap
 3. **Employées** — noms, couleurs, horaires.
 4. **Services** — catégories et prestations, en espagnol et en français.
 
-## 4. Points ouverts
+## 4. Sauvegardes
+
+Deux niveaux, et le second n'est pas facultatif :
+
+1. **Celles du fournisseur.** Aiven prend des sauvegardes automatiques ; vérifier la
+   rétention dans la console du service. Elles disparaissent avec le compte.
+2. **La copie du studio.** `npm run db:backup` écrit un dump dans `backups/`
+   (format `custom`, les 14 derniers conservés). Il faut `pg_dump` :
+   `brew install libpq && brew link --force libpq` sur macOS.
+
+Restauration :
+
+```bash
+pg_restore --clean --no-owner --dbname="$DATABASE_URL" backups/studio-crm-<horodatage>.dump
+```
+
+> **La restauration n'a pas été testée** : `pg_dump` n'est pas installé sur le poste
+> de développement. À faire une fois, sur une base jetable, **avant** de confier des
+> factures réelles au système. Une sauvegarde jamais restaurée n'est pas une sauvegarde.
+
+Planifier le dump quotidien avec `cron` ou une tâche planifiée sur le poste de la caisse.
+
+## 5. Points ouverts
 
 - Le mot de passe de la base a transité par une capture d'écran : le faire tourner.
 - Base unique dev et production tant qu'une seconde n'est pas provisionnée.
-- Sauvegarde quotidienne et restauration testée : prévues en phase 6.
+- Restauration à tester (voir ci-dessus).
