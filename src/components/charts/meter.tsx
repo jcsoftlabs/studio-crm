@@ -18,7 +18,7 @@ export function Meter({
     <div className="flex flex-col gap-2">
       <div className="flex items-baseline justify-between gap-3">
         <span className="text-xs text-muted-foreground">{label}</span>
-        <span className="text-lg font-semibold tabular-nums">{valueLabel}</span>
+        <span className="text-lg font-semibold">{valueLabel}</span>
       </div>
       <div
         role="meter"

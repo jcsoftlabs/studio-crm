@@ -7,7 +7,7 @@ import { requireUser, scopeToEmployee } from '@/lib/permissions';
 import { getStudioSettings } from '@/lib/settings';
 import { displayName } from '@/lib/clients';
 import { formatMoney } from '@/lib/money';
-import { formatInStudioTz } from '@/lib/dates';
+import { formatDateOnly, formatInStudioTz } from '@/lib/dates';
 import { addDaysToDay, localDayRange, todayInStudio } from '@/lib/agenda';
 import { isLow } from '@/lib/ncf';
 import { loadReport } from '@/lib/report-data';
@@ -37,7 +37,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
   const { start, end } = localDayRange(today, settings.timezone);
   const tomorrow = localDayRange(addDaysToDay(today, 1), settings.timezone);
 
-  const [appointments, invoices, session, lowProducts, sequences, reminders, waitlist] =
+  const [appointments, invoices, session, lowProducts, sequences, reminders, waitlist, allTime] =
     await Promise.all([
       prisma.appointment.findMany({
         where: {
@@ -74,6 +74,16 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
         },
       }),
       prisma.waitlistEntry.count({ where: { resolvedAt: null } }),
+      // Cumul depuis l'ouverture, hors ITBIS et hors factures annulées.
+      // Une agrégation en base : on ne ramène pas toutes les factures pour additionner.
+      user.role === Role.OWNER
+        ? prisma.invoice.aggregate({
+            where: { status: InvoiceStatus.ISSUED },
+            _sum: { subtotalCents: true },
+            _count: { _all: true },
+            _min: { issuedAt: true },
+          })
+        : Promise.resolve(null),
     ]);
 
   // Minutes ouvrables du jour, d'après les horaires réels des employées actives.
@@ -173,6 +183,27 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
         <h1 className="text-2xl font-semibold">{settings.name.trim() || t('title')}</h1>
         <p className="text-sm text-muted-foreground">{t('welcome', { name: user.name ?? '' })}</p>
       </div>
+
+      {allTime ? (
+        <Card>
+          <CardContent className="pt-5">
+            <p className="text-xs text-muted-foreground">{t('totalRevenue')}</p>
+            {/* Chiffre en tête : chiffres proportionnels, pas tabulaires — à cette
+                taille, tabular-nums espace inutilement les caractères. */}
+            <p className="text-5xl font-semibold leading-tight">
+              {money(allTime._sum.subtotalCents ?? 0)}
+            </p>
+            <p className="pt-1 text-sm text-muted-foreground">
+              {allTime._count._all === 0 || !allTime._min.issuedAt
+                ? t('totalRevenueEmpty')
+                : t('totalRevenueHint', {
+                    count: allTime._count._all,
+                    date: formatDateOnly(allTime._min.issuedAt, appLocale),
+                  })}
+            </p>
+          </CardContent>
+        </Card>
+      ) : null}
 
       {needsSetup && user.role === Role.OWNER ? (
         <Card>

@@ -112,7 +112,10 @@
     "occupancyHint": "{booked} min reservados sobre {available} min laborables.",
     "showData": "Ver los datos",
     "noData": "Ningún dato en este periodo.",
-    "amount": "Monto"
+    "amount": "Monto",
+    "totalRevenue": "Ingresos totales",
+    "totalRevenueHint": "{count} facturas desde el {date}, sin ITBIS.",
+    "totalRevenueEmpty": "Ninguna factura emitida todavía."
   },
   "parametres": {
     "title": "Ajustes",
