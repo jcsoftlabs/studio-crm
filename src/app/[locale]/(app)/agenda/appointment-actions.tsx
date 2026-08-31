@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { deleteAppointment, setAppointmentStatus } from './actions';
+import { enqueue } from '@/lib/offline-queue';
 
 const TRANSITIONS = [
   { status: AppointmentStatus.CONFIRMED, icon: Check },
@@ -26,6 +27,18 @@ export function StatusMenu({ id, status }: { id: string; status: AppointmentStat
   const tc = useTranslations('common');
   const [pending, startTransition] = useTransition();
 
+  /**
+   * Hors ligne, le changement de statut part en file : c'est l'écriture la plus
+   * utile pendant une coupure, et le serveur la revalide au rejeu.
+   */
+  function apply(next: AppointmentStatus) {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      void enqueue({ kind: 'appointment.setStatus', appointmentId: id, status: next });
+      return;
+    }
+    startTransition(() => void setAppointmentStatus(id, next));
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -37,7 +50,7 @@ export function StatusMenu({ id, status }: { id: string; status: AppointmentStat
         {TRANSITIONS.filter((entry) => entry.status !== status).map(({ status: next, icon: Icon }) => (
           <DropdownMenuItem
             key={next}
-            onSelect={() => startTransition(() => void setAppointmentStatus(id, next))}
+            onSelect={() => apply(next)}
           >
             <Icon className="size-4" aria-hidden />
             {t(`status.${next}` as 'status.CONFIRMED')}

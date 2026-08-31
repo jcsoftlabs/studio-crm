@@ -60,6 +60,7 @@ export function SaleDialog({
   const t = useTranslations('facture');
   const tc = useTranslations('common');
   const te = useTranslations('errors');
+  const toff = useTranslations('offline');
   const locale = useLocale() as AppLocale;
   const router = useRouter();
 
@@ -72,6 +73,7 @@ export function SaleDialog({
     { method: PaymentMethod.CASH, amount: '', reference: '' },
   ]);
   const [error, setError] = useState<string | null>(null);
+  const [offline, setOffline] = useState(false);
   const [issued, setIssued] = useState<{ ncf?: string; number?: number } | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -134,6 +136,11 @@ export function SaleDialog({
 
   function submit() {
     setError(null);
+    // Une facture n'est jamais émise hors ligne : le NCF exige le serveur (§5).
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setOffline(true);
+      return;
+    }
     startTransition(async () => {
       const result = await issueInvoice({
         clientId: clientId === '' ? null : clientId,
@@ -497,6 +504,11 @@ export function SaleDialog({
             </p>
           </div>
 
+          {offline ? (
+            <p role="alert" className="text-sm text-destructive">
+              {toff('cashBlocked')}
+            </p>
+          ) : null}
           {error ? (
             <p role="alert" className="text-sm text-destructive">
               {te(error as 'generic')}

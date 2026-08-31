@@ -589,5 +589,13 @@
       "FIXED": "Sueldo fijo",
       "BOOTH_RENT": "Alquiler de sillón"
     }
+  },
+  "offline": {
+    "offline": "Sin conexión. Puedes consultar la agenda y las fichas; los cobros necesitan el servidor.",
+    "queued": "{count} cambios en espera de sincronizar.",
+    "sync": "Sincronizar",
+    "syncing": "Sincronizando…",
+    "conflicts": "{count} cambios no se pudieron aplicar; verifícalos.",
+    "cashBlocked": "La caja necesita conexión: un NCF solo se atribuye en el servidor."
   }
 }

@@ -589,5 +589,13 @@
       "FIXED": "Salaire fixe",
       "BOOTH_RENT": "Location de fauteuil"
     }
+  },
+  "offline": {
+    "offline": "Hors ligne. Vous pouvez consulter l'agenda et les fiches ; les encaissements exigent le serveur.",
+    "queued": "{count} modifications en attente de synchronisation.",
+    "sync": "Synchroniser",
+    "syncing": "Synchronisation…",
+    "conflicts": "{count} modifications n'ont pas pu être appliquées ; vérifiez-les.",
+    "cashBlocked": "La caisse exige une connexion : un NCF ne s'attribue que sur le serveur."
   }
 }

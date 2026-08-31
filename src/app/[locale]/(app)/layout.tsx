@@ -3,6 +3,7 @@ import { requireUser } from '@/lib/permissions';
 import { AppSidebar } from '@/components/app-sidebar';
 import { BottomNav } from '@/components/bottom-nav';
 import { UserMenu } from '@/components/user-menu';
+import { OfflineBanner } from '@/components/offline-banner';
 
 export default async function AppLayout({
   children,
@@ -26,6 +27,7 @@ export default async function AppLayout({
           <span className="hidden text-sm text-muted-foreground md:inline">{user.name}</span>
           <UserMenu name={user.name ?? ''} email={user.email ?? ''} />
         </header>
+        <OfflineBanner />
         <main className="flex-1 p-4 pb-24 md:p-6 md:pb-6">{children}</main>
         <div className="print:hidden">
           <BottomNav role={user.role} />

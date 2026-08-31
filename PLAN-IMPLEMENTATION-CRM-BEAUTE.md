@@ -373,13 +373,44 @@ l'historique conservant la vente **et** son annulation ; écran des commissions 
 serveur à un composant client — `Functions cannot be passed directly to Client Components`.
 Les montants sont désormais formatés côté serveur.
 
-### Phase 5 — Fidélité, marketing, offline (1 semaine)
-- Points ou visites, forfaits multi-séances, bons cadeaux.
-- Segments : clientes inactives depuis 60 jours, anniversaires du mois, top clientes.
-- Envoi de campagnes WhatsApp sur un segment, avec modèle bilingue.
-- Mode dégradé : consultation de l'agenda du jour et des fiches clientes hors ligne ;
-  file d'attente des écritures avec résolution de conflits à la reconnexion.
-  **Les factures ne sont jamais émises hors ligne** (le NCF exige le serveur).
+### Phase 5 — Fidélité, marketing, offline (1 semaine) — ✅ **livrée le 2026-08-30**
+- [x] Points et visites (`LoyaltyAccount`), crédités à l'émission selon un réglage,
+      retirés à l'annulation. `0` point par RD$ désactive le programme.
+- [x] Forfaits multi-séances : vendus et consommés depuis la caisse (phase 4).
+- [x] Bons cadeaux : **vendus** depuis la caisse avec code et solde, et utilisés en
+      règlement. À l'annulation d'une facture, le bon est **désactivé, jamais supprimé** :
+      il a pu être remis à la cliente.
+- [x] Trois segments : inactives (délai réglable), anniversaires du mois, meilleures
+      clientes par montant dépensé.
+- [x] Campagnes : chaque message est rédigé **dans la langue de la cliente**, modèle
+      retouchable avant envoi. L'envoi reste manuel, un par un — voir l'écart ci-dessous.
+- [x] Mode dégradé : service worker (réseau d'abord, cache en repli), bandeau hors ligne,
+      file d'attente IndexedDB, rejeu **revalidé côté serveur** à la reconnexion.
+- [x] **Les factures ne sont jamais émises hors ligne** : la caisse refuse et l'explique.
+
+**Vérifié en conditions réelles** : coupure simulée → changement de statut mis en file,
+base inchangée ; reconnexion → rejeu appliqué (`SCHEDULED` → `NO_SHOW`), file vidée.
+Conflits provoqués → rendez-vous annulé entre-temps rendu `conflict: cancelledMeanwhile`
+sans écraser l'annulation, téléphone déjà pris rendu `conflict: duplicate` sans créer de
+doublon, cible inexistante rendue `rejected: notFound`. Campagne « meilleures clientes » →
+liens `wa.me` **en espagnol** alors que l'interface était en français.
+
+**Écarts actés en phase 5** :
+- **Seules trois écritures entrent dans la file** : statut de rendez-vous, création de
+  cliente, notes de cliente. La **création et le déplacement d'un rendez-vous en sont
+  exclus** : leur règle de non-chevauchement ne peut pas s'appliquer hors ligne, et rejouer
+  à l'aveugle mettrait deux clientes sur le même créneau.
+- Une opération rejouée sort de la file, appliquée ou non : la garder reviendrait à la
+  retenter indéfiniment. Les conflits sont comptés et signalés dans le bandeau.
+- **Pas d'envoi de campagne en masse** : sans Cloud API, `wa.me` n'ouvre qu'une
+  conversation à la fois. L'écran liste les clientes et marque celles déjà traitées.
+- Le service worker ne met **jamais** en cache la caisse, les tickets, l'export ni l'auth.
+
+**Non vérifié** : l'enregistrement du **service worker** échoue dans le navigateur intégré
+utilisé pour les tests, qui le bloque (le script est pourtant servi en 200 avec le bon
+Content-Type). Le cache hors ligne **doit être testé dans un vrai navigateur** avant la mise
+en production. La file d'attente et son rejeu, eux, sont vérifiés et ne dépendent pas du
+service worker.
 
 ### Phase 6 — Rapports et mise en production (0,5 semaine) — ✅ **livrée le 2026-08-30**
 - [x] Rapports sur une période libre : CA hors ITBIS, factures émises, panier moyen, taux
