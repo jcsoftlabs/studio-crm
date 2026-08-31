@@ -67,7 +67,12 @@
     "close2": "Cerrar caja",
     "reason": "Motivo",
     "amount": "Monto",
-    "remove": "Quitar"
+    "remove": "Quitar",
+    "period": "Periodo",
+    "from": "Desde",
+    "to": "Hasta",
+    "apply": "Aplicar",
+    "stockQty": "Existencias"
   },
   "auth": {
     "loginTitle": "Iniciar sesión",
@@ -302,7 +307,10 @@
       "phone": "Teléfono",
       "color": "Color en la agenda",
       "account": "Cuenta vinculada",
-      "active": "Activa"
+      "active": "Activa",
+      "salaryType": "Tipo de remuneración",
+      "baseSalary": "Sueldo fijo",
+      "commissionRate": "Comisión (%)"
     },
     "noAccount": "Sin cuenta",
     "schedule": {
@@ -318,7 +326,10 @@
       "reason": "Motivo",
       "delete": "Eliminar el descanso"
     },
-    "onlyOwner": "Solo la propietaria administra al personal."
+    "onlyOwner": "Solo la propietaria administra al personal.",
+    "hints": {
+      "commissionRate": "Vacío = se usa la comisión de Ajustes."
+    }
   },
   "caisse": {
     "title": "Caja",
@@ -346,7 +357,46 @@
     "pendingAppointments": "Citas por cobrar"
   },
   "stock": {
-    "title": "Inventario"
+    "title": "Inventario",
+    "subtitle": "Productos, proveedores y movimientos.",
+    "newProduct": "Nuevo producto",
+    "newSupplier": "Nuevo proveedor",
+    "empty": "Ningún producto registrado.",
+    "suppliers": "Proveedores",
+    "noSuppliers": "Ningún proveedor.",
+    "lowStock": "Existencias bajas",
+    "lowStockNone": "Ningún producto bajo el mínimo.",
+    "forResale": "Reventa",
+    "internalUse": "Uso interno",
+    "movements": "Movimientos",
+    "newMovement": "Registrar un movimiento",
+    "noMovements": "Ningún movimiento.",
+    "margin": "Margen",
+    "fields": {
+      "name": "Nombre",
+      "sku": "Código",
+      "costCents": "Costo",
+      "priceCents": "Precio de venta",
+      "stockQty": "Existencias",
+      "minStockQty": "Mínimo antes de alerta",
+      "forResale": "Se vende a las clientas",
+      "supplier": "Proveedor",
+      "active": "Activo",
+      "qty": "Cantidad",
+      "type": "Tipo",
+      "phone": "Teléfono",
+      "notes": "Notas"
+    },
+    "type": {
+      "PURCHASE": "Compra",
+      "SALE": "Venta",
+      "INTERNAL_USE": "Uso interno",
+      "ADJUSTMENT": "Ajuste"
+    },
+    "hints": {
+      "forResale": "Desactívalo para un producto de cabina.",
+      "qty": "Positivo para una entrada, negativo para una salida."
+    }
   },
   "fidelite": {
     "title": "Fidelidad"
@@ -385,7 +435,12 @@
     "giftCardInvalid": "Bono regalo no válido o sin saldo.",
     "sessionAlreadyOpen": "Ya hay una caja abierta.",
     "invalidAmount": "Monto no válido.",
-    "storageNotConfigured": "El almacenamiento de fotos no está configurado. Añade BLOB_READ_WRITE_TOKEN."
+    "storageNotConfigured": "El almacenamiento de fotos no está configurado. Añade BLOB_READ_WRITE_TOKEN.",
+    "outOfStock": "Existencias insuficientes.",
+    "productNotForResale": "Este producto es de uso interno, no se vende.",
+    "packageNeedsClient": "Elige una clienta para usar un paquete.",
+    "noUsablePackage": "La clienta no tiene paquete válido con sesiones disponibles.",
+    "invalidQty": "Cantidad no válida."
   },
   "facture": {
     "title": "Factura",
@@ -434,7 +489,9 @@
     "noSequenceWarning": "Ninguna secuencia NCF activa: el cobro se registrará como recibo sin valor fiscal.",
     "issueWithoutNcf": "Emitir un recibo",
     "issuedReceipt": "Recibo N° {number} emitido, sin valor fiscal.",
-    "shareTextReceipt": "Hola {client}, aquí está su recibo de {studio}. N° {number}. Total {total}. ¡Gracias!"
+    "shareTextReceipt": "Hola {client}, aquí está su recibo de {studio}. N° {number}. Total {total}. ¡Gracias!",
+    "addProduct": "Añadir un producto",
+    "addPackage": "Vender un paquete"
   },
   "ncf": {
     "title": "Secuencias NCF",
@@ -456,5 +513,22 @@
     },
     "emptyOptional": "Ninguna secuencia registrada. Los cobros se emiten como recibos sin valor fiscal.",
     "blocked": "Ninguna secuencia registrada y los cobros sin NCF están desactivados: no se puede facturar."
+  },
+  "commissions": {
+    "title": "Comisiones",
+    "subtitle": "Calculadas al emitir la factura, liquidadas por periodo.",
+    "pending": "Por liquidar",
+    "paid": "Liquidadas",
+    "empty": "Ninguna comisión en este periodo.",
+    "settle": "Liquidar el periodo",
+    "settled": "{count} comisiones liquidadas.",
+    "base": "Base",
+    "rate": "Tasa",
+    "amount": "Comisión",
+    "salaryType": {
+      "COMMISSION": "A comisión",
+      "FIXED": "Sueldo fijo",
+      "BOOTH_RENT": "Alquiler de sillón"
+    }
   }
 }

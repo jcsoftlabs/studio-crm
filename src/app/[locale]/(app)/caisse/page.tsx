@@ -57,7 +57,8 @@ export default async function CaissePage({ params }: { params: Promise<{ locale:
     },
   });
 
-  const [employees, clients, services, closedSessions, activeSequences] = await Promise.all([
+  const [employees, clients, services, closedSessions, activeSequences, products, packages] =
+    await Promise.all([
     prisma.employee.findMany({
       where: { deletedAt: null, active: true },
       orderBy: { order: 'asc' },
@@ -78,8 +79,17 @@ export default async function CaissePage({ params }: { params: Promise<{ locale:
       take: 5,
       include: { employee: { select: { name: true } } },
     }),
-    prisma.ncfSequence.findMany({ where: { active: true }, select: { type: true } }),
-  ]);
+      prisma.ncfSequence.findMany({ where: { active: true }, select: { type: true } }),
+      prisma.product.findMany({
+        where: { deletedAt: null, active: true, forResale: true },
+        orderBy: { name: 'asc' },
+        select: { id: true, name: true, priceCents: true, stockQty: true },
+      }),
+      prisma.package.findMany({
+        where: { deletedAt: null, active: true },
+        orderBy: { nameEs: 'asc' },
+      }),
+    ]);
 
   const today = todayInStudio(settings.timezone);
   const { start, end } = localDayRange(today, settings.timezone);
@@ -107,6 +117,8 @@ export default async function CaissePage({ params }: { params: Promise<{ locale:
     lines: appointment.items.map((item) => ({
       description: appLocale === 'es' ? item.service.nameEs : item.service.nameFr,
       serviceId: item.serviceId,
+      productId: null,
+      packageId: null,
       employeeId: item.employeeId,
       quantity: 1,
       unitPriceCents: item.priceCents,
@@ -134,6 +146,12 @@ export default async function CaissePage({ params }: { params: Promise<{ locale:
                 id: service.id,
                 name: appLocale === 'es' ? service.nameEs : service.nameFr,
                 priceCents: service.priceCents,
+              }))}
+              products={products}
+              packages={packages.map((pack) => ({
+                id: pack.id,
+                name: appLocale === 'es' ? pack.nameEs : pack.nameFr,
+                priceCents: pack.priceCents,
               }))}
               employees={employees}
               appointments={pendingOptions}

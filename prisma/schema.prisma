@@ -213,6 +213,7 @@ model Service {
 model Package {
   id            String  @id @default(cuid())
   clientPackages ClientPackage[]
+  invoiceLines   InvoiceLine[]
   nameEs        String
   nameFr        String
   priceCents    Int
@@ -253,6 +254,12 @@ model Employee {
   active Boolean @default(true)
   order  Int     @default(0)
 
+  /// Rémunération, paramétrée par la propriétaire (§7.2).
+  salaryType      SalaryType @default(COMMISSION)
+  baseSalaryCents Int        @default(0)
+  /// Points de base. Null = on retombe sur le taux des Paramètres.
+  commissionRateBp Int?
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
@@ -264,6 +271,8 @@ model Employee {
   waitlist         WaitlistEntry[]
   cashSessions     CashSession[]
   invoiceLines     InvoiceLine[]
+  commissions      Commission[]
+  stockMovements   StockMovement[]
 
   @@index([deletedAt, order])
 }
@@ -440,8 +449,11 @@ model Invoice {
   createdBy String?
   createdAt DateTime @default(now())
 
-  lines    InvoiceLine[]
-  payments Payment[]
+  lines       InvoiceLine[]
+  payments    Payment[]
+  commissions Commission[]
+  stockMovements StockMovement[]
+  clientPackages ClientPackage[]
 
   @@index([issuedAt])
   @@index([clientId, issuedAt])
@@ -455,6 +467,10 @@ model InvoiceLine {
 
   service   Service? @relation(fields: [serviceId], references: [id])
   serviceId String?
+  product   Product? @relation(fields: [productId], references: [id])
+  productId String?
+  package   Package? @relation(fields: [packageId], references: [id])
+  packageId String?
   employee  Employee? @relation(fields: [employeeId], references: [id])
   employeeId String?
 
@@ -479,6 +495,9 @@ model Payment {
 
   giftCard   GiftCard? @relation(fields: [giftCardId], references: [id])
   giftCardId String?
+  /// Forfait dont une séance a été consommée, pour pouvoir la rendre à l'annulation.
+  clientPackage   ClientPackage? @relation(fields: [clientPackageId], references: [id])
+  clientPackageId String?
 
   createdAt DateTime @default(now())
 
@@ -531,6 +550,11 @@ model ClientPackage {
   expiresAt    DateTime
   createdAt    DateTime @default(now())
 
+  /// Facture d'achat du forfait, pour la traçabilité.
+  invoice   Invoice? @relation(fields: [invoiceId], references: [id])
+  invoiceId String?
+  payments  Payment[]
+
   @@index([clientId, expiresAt])
 }
 
@@ -547,4 +571,100 @@ model GiftCard {
 
   createdAt DateTime @default(now())
   payments  Payment[]
+}
+
+
+enum SalaryType {
+  COMMISSION
+  FIXED
+  BOOTH_RENT
+}
+
+enum StockMovementType {
+  PURCHASE
+  SALE
+  INTERNAL_USE
+  ADJUSTMENT
+}
+
+/// Une ligne par prestation facturée : le détail permet de justifier le règlement.
+model Commission {
+  id         String   @id @default(cuid())
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  employeeId String
+  invoice    Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoiceId  String
+
+  /// Assiette : total de la ligne, remise déduite, hors ITBIS.
+  baseCents   Int
+  rateBp      Int
+  amountCents Int
+
+  paidAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([employeeId, paidAt])
+  @@index([invoiceId])
+}
+
+model Supplier {
+  id    String @id @default(cuid())
+  name  String
+  phone String @default("")
+  notes String @default("")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  products Product[]
+}
+
+model Product {
+  id   String @id @default(cuid())
+  name String
+  sku  String @default("")
+
+  costCents  Int @default(0)
+  priceCents Int @default(0)
+
+  stockQty    Int @default(0)
+  minStockQty Int @default(0)
+
+  /// Faux = produit de cabine, consommé en interne et jamais vendu.
+  forResale Boolean @default(true)
+  active    Boolean @default(true)
+
+  supplier   Supplier? @relation(fields: [supplierId], references: [id])
+  supplierId String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  movements    StockMovement[]
+  invoiceLines InvoiceLine[]
+
+  @@index([deletedAt, name])
+}
+
+model StockMovement {
+  id        String  @id @default(cuid())
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+
+  type StockMovementType
+  /// Positif pour une entrée, négatif pour une sortie.
+  qty    Int
+  reason String @default("")
+
+  invoice    Invoice?  @relation(fields: [invoiceId], references: [id])
+  invoiceId  String?
+  employee   Employee? @relation(fields: [employeeId], references: [id])
+  employeeId String?
+
+  createdBy String?
+  createdAt DateTime @default(now())
+
+  @@index([productId, createdAt])
 }

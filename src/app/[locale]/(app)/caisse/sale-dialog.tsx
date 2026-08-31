@@ -22,6 +22,8 @@ import { issueInvoice } from './actions';
 
 type Option = { id: string; name: string };
 type ServiceOption = Option & { priceCents: number };
+type ProductOption = Option & { priceCents: number; stockQty: number };
+type PackageOption = Option & { priceCents: number };
 export type PendingAppointment = {
   id: string;
   label: string;
@@ -34,6 +36,8 @@ type PaymentRow = { method: PaymentMethod; amount: string; reference: string };
 export function SaleDialog({
   clients,
   services,
+  products,
+  packages,
   employees,
   appointments,
   itbisRateBp,
@@ -43,6 +47,8 @@ export function SaleDialog({
 }: {
   clients: Option[];
   services: ServiceOption[];
+  products: ProductOption[];
+  packages: PackageOption[];
   employees: Option[];
   appointments: PendingAppointment[];
   itbisRateBp: number;
@@ -77,17 +83,28 @@ export function SaleDialog({
   const balance = totals.totalCents - paid;
   const money = (cents: number) => formatMoney(cents, locale, currencySymbol);
 
-  function addService(serviceId: string) {
-    const service = services.find((entry) => entry.id === serviceId);
-    if (!service) return;
+  function addLine(
+    kind: 'service' | 'product' | 'package',
+    id: string,
+  ) {
+    const source =
+      kind === 'service'
+        ? services.find((entry) => entry.id === id)
+        : kind === 'product'
+          ? products.find((entry) => entry.id === id)
+          : packages.find((entry) => entry.id === id);
+    if (!source) return;
+
     setLines((prev) => [
       ...prev,
       {
-        description: service.name,
-        serviceId: service.id,
+        description: source.name,
+        serviceId: kind === 'service' ? id : null,
+        productId: kind === 'product' ? id : null,
+        packageId: kind === 'package' ? id : null,
         employeeId: null,
         quantity: 1,
-        unitPriceCents: service.priceCents,
+        unitPriceCents: source.priceCents,
         discountCents: 0,
       },
     ]);
@@ -104,7 +121,13 @@ export function SaleDialog({
         clientId: clientId === '' ? null : clientId,
         appointmentId: appointmentId === '' ? null : appointmentId,
         ncfType,
-        lines,
+        lines: lines.map((line) => ({
+          ...line,
+          serviceId: line.serviceId ?? null,
+          productId: line.productId ?? null,
+          packageId: line.packageId ?? null,
+          employeeId: line.employeeId ?? null,
+        })),
         payments: payments
           .map((row) => ({
             method: row.method,
@@ -204,21 +227,57 @@ export function SaleDialog({
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="addService">{t('lines')}</Label>
-            <Select
-              id="addService"
-              value=""
-              onChange={(event) => {
-                addService(event.target.value);
-                event.target.value = '';
-              }}
-            >
-              <option value="">{t('addLine')}</option>
-              {services.map((service) => (
-                <option key={service.id} value={service.id}>
-                  {service.name}
-                </option>
-              ))}
-            </Select>
+            <div className="grid gap-2 sm:grid-cols-3">
+              <Select
+                id="addService"
+                value=""
+                onChange={(event) => {
+                  addLine('service', event.target.value);
+                  event.target.value = '';
+                }}
+              >
+                <option value="">{t('addLine')}</option>
+                {services.map((service) => (
+                  <option key={service.id} value={service.id}>
+                    {service.name}
+                  </option>
+                ))}
+              </Select>
+
+              <Select
+                id="addProduct"
+                aria-label={t('addProduct')}
+                value=""
+                onChange={(event) => {
+                  addLine('product', event.target.value);
+                  event.target.value = '';
+                }}
+              >
+                <option value="">{t('addProduct')}</option>
+                {products.map((product) => (
+                  <option key={product.id} value={product.id} disabled={product.stockQty <= 0}>
+                    {product.name} ({product.stockQty})
+                  </option>
+                ))}
+              </Select>
+
+              <Select
+                id="addPackage"
+                aria-label={t('addPackage')}
+                value=""
+                onChange={(event) => {
+                  addLine('package', event.target.value);
+                  event.target.value = '';
+                }}
+              >
+                <option value="">{t('addPackage')}</option>
+                {packages.map((pack) => (
+                  <option key={pack.id} value={pack.id}>
+                    {pack.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
 
             {lines.length === 0 ? (
               <p className="text-sm text-muted-foreground">{te('linesRequired')}</p>

@@ -60,6 +60,7 @@ async function main() {
   await seedEmployees();
   await seedAppointments();
   await seedNcf();
+  await seedStock();
 }
 
 const CATEGORIES = [
@@ -366,4 +367,54 @@ async function seedNcf() {
   }
 
   console.log(`NCF : ${await prisma.ncfSequence.count()} secuencia(s), bono ${cardCode}`);
+}
+
+const SUPPLIERS = [
+  { name: 'Distribuidora Bella', phone: '809-555-0200' },
+  { name: 'Beauty Import RD', phone: '829-555-0201' },
+];
+
+const PRODUCTS = [
+  { name: 'Esmalte gel rojo', sku: 'GEL-001', cost: 180, price: 450, stock: 24, min: 6, forResale: true },
+  { name: 'Removedor de acetona', sku: 'ACE-001', cost: 90, price: 0, stock: 12, min: 4, forResale: false },
+  { name: 'Shampoo hidratante 1L', sku: 'SHA-001', cost: 420, price: 950, stock: 8, min: 3, forResale: true },
+  { name: 'Mascarilla capilar', sku: 'MAS-001', cost: 350, price: 800, stock: 2, min: 5, forResale: true },
+  { name: 'Tinte castaño', sku: 'TIN-001', cost: 260, price: 0, stock: 15, min: 5, forResale: false },
+];
+
+async function seedStock() {
+  for (const supplier of SUPPLIERS) {
+    const found = await prisma.supplier.findFirst({ where: { name: supplier.name, deletedAt: null } });
+    if (!found) await prisma.supplier.create({ data: supplier });
+  }
+
+  const suppliers = await prisma.supplier.findMany({ where: { deletedAt: null } });
+
+  for (const [index, product] of PRODUCTS.entries()) {
+    const found = await prisma.product.findFirst({ where: { sku: product.sku, deletedAt: null } });
+    if (found) continue;
+
+    const created = await prisma.product.create({
+      data: {
+        name: product.name,
+        sku: product.sku,
+        costCents: product.cost * 100,
+        priceCents: product.price * 100,
+        stockQty: product.stock,
+        minStockQty: product.min,
+        forResale: product.forResale,
+        supplierId: suppliers[index % suppliers.length]?.id ?? null,
+      },
+    });
+    await prisma.stockMovement.create({
+      data: {
+        productId: created.id,
+        type: 'PURCHASE',
+        qty: product.stock,
+        reason: 'inventario inicial',
+      },
+    });
+  }
+
+  console.log(`Inventario : ${await prisma.product.count({ where: { deletedAt: null } })} productos`);
 }

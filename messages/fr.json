@@ -67,7 +67,12 @@
     "close2": "Fermer la caisse",
     "reason": "Motif",
     "amount": "Montant",
-    "remove": "Retirer"
+    "remove": "Retirer",
+    "period": "Période",
+    "from": "Du",
+    "to": "Au",
+    "apply": "Appliquer",
+    "stockQty": "Stock"
   },
   "auth": {
     "loginTitle": "Connexion",
@@ -302,7 +307,10 @@
       "phone": "Téléphone",
       "color": "Couleur dans l'agenda",
       "account": "Compte lié",
-      "active": "Active"
+      "active": "Active",
+      "salaryType": "Type de rémunération",
+      "baseSalary": "Salaire fixe",
+      "commissionRate": "Commission (%)"
     },
     "noAccount": "Sans compte",
     "schedule": {
@@ -318,7 +326,10 @@
       "reason": "Motif",
       "delete": "Supprimer le congé"
     },
-    "onlyOwner": "Seule la propriétaire gère le personnel."
+    "onlyOwner": "Seule la propriétaire gère le personnel.",
+    "hints": {
+      "commissionRate": "Vide = on utilise la commission des Paramètres."
+    }
   },
   "caisse": {
     "title": "Caisse",
@@ -346,7 +357,46 @@
     "pendingAppointments": "Rendez-vous à encaisser"
   },
   "stock": {
-    "title": "Stock"
+    "title": "Stock",
+    "subtitle": "Produits, fournisseurs et mouvements.",
+    "newProduct": "Nouveau produit",
+    "newSupplier": "Nouveau fournisseur",
+    "empty": "Aucun produit enregistré.",
+    "suppliers": "Fournisseurs",
+    "noSuppliers": "Aucun fournisseur.",
+    "lowStock": "Stock bas",
+    "lowStockNone": "Aucun produit sous son seuil.",
+    "forResale": "Revente",
+    "internalUse": "Usage interne",
+    "movements": "Mouvements",
+    "newMovement": "Enregistrer un mouvement",
+    "noMovements": "Aucun mouvement.",
+    "margin": "Marge",
+    "fields": {
+      "name": "Nom",
+      "sku": "Référence",
+      "costCents": "Coût",
+      "priceCents": "Prix de vente",
+      "stockQty": "Stock",
+      "minStockQty": "Seuil d'alerte",
+      "forResale": "Vendu aux clientes",
+      "supplier": "Fournisseur",
+      "active": "Actif",
+      "qty": "Quantité",
+      "type": "Type",
+      "phone": "Téléphone",
+      "notes": "Notes"
+    },
+    "type": {
+      "PURCHASE": "Achat",
+      "SALE": "Vente",
+      "INTERNAL_USE": "Usage interne",
+      "ADJUSTMENT": "Ajustement"
+    },
+    "hints": {
+      "forResale": "Décochez pour un produit de cabine.",
+      "qty": "Positif pour une entrée, négatif pour une sortie."
+    }
   },
   "fidelite": {
     "title": "Fidélité"
@@ -385,7 +435,12 @@
     "giftCardInvalid": "Bon cadeau invalide ou sans solde.",
     "sessionAlreadyOpen": "Une caisse est déjà ouverte.",
     "invalidAmount": "Montant invalide.",
-    "storageNotConfigured": "Le stockage des photos n'est pas configuré. Ajoutez BLOB_READ_WRITE_TOKEN."
+    "storageNotConfigured": "Le stockage des photos n'est pas configuré. Ajoutez BLOB_READ_WRITE_TOKEN.",
+    "outOfStock": "Stock insuffisant.",
+    "productNotForResale": "Ce produit est à usage interne, il ne se vend pas.",
+    "packageNeedsClient": "Choisissez une cliente pour utiliser un forfait.",
+    "noUsablePackage": "La cliente n'a aucun forfait valide avec des séances disponibles.",
+    "invalidQty": "Quantité invalide."
   },
   "facture": {
     "title": "Facture",
@@ -434,7 +489,9 @@
     "noSequenceWarning": "Aucune séquence NCF active : l'encaissement sera enregistré comme reçu sans valeur fiscale.",
     "issueWithoutNcf": "Émettre un reçu",
     "issuedReceipt": "Reçu n° {number} émis, sans valeur fiscale.",
-    "shareTextReceipt": "Bonjour {client}, voici votre reçu de {studio}. N° {number}. Total {total}. Merci !"
+    "shareTextReceipt": "Bonjour {client}, voici votre reçu de {studio}. N° {number}. Total {total}. Merci !",
+    "addProduct": "Ajouter un produit",
+    "addPackage": "Vendre un forfait"
   },
   "ncf": {
     "title": "Séquences NCF",
@@ -456,5 +513,22 @@
     },
     "emptyOptional": "Aucune séquence enregistrée. Les encaissements sortent en reçus sans valeur fiscale.",
     "blocked": "Aucune séquence enregistrée et les encaissements sans NCF sont désactivés : facturation impossible."
+  },
+  "commissions": {
+    "title": "Commissions",
+    "subtitle": "Calculées à l'émission de la facture, réglées par période.",
+    "pending": "À régler",
+    "paid": "Réglées",
+    "empty": "Aucune commission sur cette période.",
+    "settle": "Régler la période",
+    "settled": "{count} commissions réglées.",
+    "base": "Assiette",
+    "rate": "Taux",
+    "amount": "Commission",
+    "salaryType": {
+      "COMMISSION": "À la commission",
+      "FIXED": "Salaire fixe",
+      "BOOTH_RENT": "Location de fauteuil"
+    }
   }
 }

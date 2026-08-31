@@ -337,12 +337,41 @@ délai porté à 20 s. Même correction sur l'enregistrement des Paramètres (se
 (`FATAL: sorry, too many clients already`) — constaté à 12 transactions parallèles. `connection_limit`
 est documenté dans `.env.example` et **doit être posé sur Vercel avant la mise en production**.
 
-### Phase 4 — Personnel, commissions, stock (1 semaine)
-- Horaires, disponibilités, congés des employées.
-- Calcul automatique des commissions à l'émission de la facture (taux du service, sinon taux
-  de l'employée), écran de règlement des commissions par période.
-- CRUD Product et Supplier, distinction usage interne / revente.
-- Mouvements de stock, décrémentation automatique à la vente, alertes de stock minimum.
+### Phase 4 — Personnel, commissions, stock (1 semaine) — ✅ **livrée le 2026-08-30**
+- [x] Horaires, disponibilités, congés — déjà livrés en phase 2.
+- [x] Rémunération paramétrable par employée : `salaryType` (commission / fixe / location de
+      fauteuil), `baseSalaryCents`, `commissionRateBp`.
+- [x] Commissions calculées **à l'émission de la facture**, cascade taux du service → taux de
+      l'employée → taux des Paramètres. Seule une employée à la commission en génère.
+      Une ligne par prestation, avec son assiette, pour justifier le règlement.
+- [x] Écran de règlement par période sur `/staff`, agrégé par employée, tracé dans `AuditLog`
+      (`COMMISSIONS_SETTLE`).
+- [x] CRUD `Product` et `Supplier`, distinction revente / usage interne.
+- [x] Mouvements de stock, décrément automatique à la vente, alertes de stock minimum.
+      Le stock initial passe par un mouvement `PURCHASE` : jamais de quantité posée à la main.
+- [x] **Trou de la phase 3 bouché** : le paiement « Forfait » consomme désormais une séance et
+      `Payment.clientPackageId` retient laquelle. Les forfaits et les produits se vendent depuis
+      la caisse.
+
+**Vérifié en conditions réelles** : facture d'un service à RD$ 1 800 affecté à Yamilet (30 %) et
+d'un produit → commission de RD$ 540 sur la seule ligne service, stock du produit passé de 24 à 23 ;
+paiement par forfait → séance consommée 1/5 avec le forfait référencé sur le règlement ; annulation
+de la facture → commission supprimée, mouvement compensatoire `ADJUSTMENT +1`, stock revenu à 24,
+l'historique conservant la vente **et** son annulation ; écran des commissions affichant
+« Yamilet · assiette RD$ 800 · RD$ 240 · à régler ».
+
+**Écarts actés en phase 4** :
+- `Commission` porte `baseCents` et `rateBp` en plus du montant : sans l'assiette, une employée
+  ne peut pas vérifier son règlement.
+- `InvoiceLine` gagne `productId` et `packageId` ; `ClientPackage` gagne `invoiceId`.
+- Le stock est vérifié **avant** l'émission : on ne vend pas ce qu'on n'a pas, et un produit
+  de cabine est refusé à la vente.
+- Une facture annulée ne rémunère personne : les commissions sont supprimées, pas marquées.
+- Le coût d'achat et la marge ne sont visibles que par `OWNER` (§3.2).
+
+**Bug trouvé au passage** : la page `/staff` passait une fonction de formatage d'un composant
+serveur à un composant client — `Functions cannot be passed directly to Client Components`.
+Les montants sont désormais formatés côté serveur.
 
 ### Phase 5 — Fidélité, marketing, offline (1 semaine)
 - Points ou visites, forfaits multi-séances, bons cadeaux.

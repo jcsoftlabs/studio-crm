@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState, useTransition } from 'react';
 import { CalendarOff, Clock, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { SalaryType } from '@prisma/client';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -32,6 +33,9 @@ type Employee = {
   color: string;
   active: boolean;
   userId: string | null;
+  salaryType: SalaryType;
+  baseSalaryCents: number;
+  commissionRateBp: number | null;
 };
 type Account = { id: string; name: string; email: string };
 type Schedule = { weekday: number; closed: boolean; openMinute: number; closeMinute: number };
@@ -110,6 +114,8 @@ export function EmployeeDialog({
             </Select>
           </div>
 
+          <SalaryFields employee={employee} />
+
           <ActiveField active={employee?.active ?? true} label={t('fields.active')} />
 
           {state.error ? (
@@ -123,6 +129,61 @@ export function EmployeeDialog({
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function SalaryFields({ employee }: { employee?: Employee }) {
+  const t = useTranslations('staff');
+  const tcom = useTranslations('commissions');
+  const [salaryType, setSalaryType] = useState<SalaryType>(
+    employee?.salaryType ?? SalaryType.COMMISSION,
+  );
+
+  return (
+    <>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="salaryType">{t('fields.salaryType')}</Label>
+        <Select
+          id="salaryType"
+          name="salaryType"
+          value={salaryType}
+          onChange={(event) => setSalaryType(event.target.value as SalaryType)}
+        >
+          {Object.values(SalaryType).map((value) => (
+            <option key={value} value={value}>
+              {tcom(`salaryType.${value}` as 'salaryType.COMMISSION')}
+            </option>
+          ))}
+        </Select>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        {salaryType === SalaryType.COMMISSION ? (
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="commissionRate">{t('fields.commissionRate')}</Label>
+            <Input
+              id="commissionRate"
+              name="commissionRate"
+              inputMode="decimal"
+              defaultValue={
+                employee?.commissionRateBp != null ? (employee.commissionRateBp / 100).toString() : ''
+              }
+            />
+            <p className="text-xs text-muted-foreground">{t('hints.commissionRate')}</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="baseSalary">{t('fields.baseSalary')}</Label>
+            <Input
+              id="baseSalary"
+              name="baseSalary"
+              inputMode="decimal"
+              defaultValue={employee ? (employee.baseSalaryCents / 100).toString() : ''}
+            />
+          </div>
+        )}
+      </div>
+    </>
   );
 }
 

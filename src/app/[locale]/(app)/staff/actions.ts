@@ -2,10 +2,11 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { Role } from '@prisma/client';
+import { Role, SalaryType } from '@prisma/client';
 import { prisma } from '@/lib/db';
-import { ForbiddenError, requireRole } from '@/lib/permissions';
+import { ForbiddenError, getSessionUser, requireRole } from '@/lib/permissions';
 import { hhmmToMinutes } from '@/lib/dates';
+import { parseMoneyToCents, parseRateToBp } from '@/lib/money';
 import { localToUtc } from '@/lib/agenda';
 import { echoForm, type FormEcho } from '@/lib/form-echo';
 
@@ -37,6 +38,7 @@ export async function saveEmployee(prev: StaffState, formData: FormData): Promis
   if (denied) return { ...denied, echo };
 
   const rawUserId = String(formData.get('userId') ?? '').trim();
+  const rawRate = String(formData.get('commissionRate') ?? '').trim();
   const parsed = z
     .object({
       name: z.string().trim().min(1).max(80),
@@ -44,6 +46,9 @@ export async function saveEmployee(prev: StaffState, formData: FormData): Promis
       color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
       active: z.boolean(),
       userId: z.string().nullable(),
+      salaryType: z.nativeEnum(SalaryType),
+      baseSalaryCents: z.number().int().min(0),
+      commissionRateBp: z.number().int().min(0).max(10000).nullable(),
     })
     .safeParse({
       name: formData.get('name') ?? '',
@@ -51,6 +56,9 @@ export async function saveEmployee(prev: StaffState, formData: FormData): Promis
       color: formData.get('color') ?? '#c084fc',
       active: formData.get('active') !== 'off',
       userId: rawUserId === '' ? null : rawUserId,
+      salaryType: formData.get('salaryType') ?? SalaryType.COMMISSION,
+      baseSalaryCents: parseMoneyToCents(String(formData.get('baseSalary') ?? '0')) ?? 0,
+      commissionRateBp: rawRate === '' ? null : parseRateToBp(rawRate),
     });
   if (!parsed.success) return { error: 'nameRequired', echo };
 
@@ -148,4 +156,39 @@ export async function deleteTimeOff(id: string) {
   await prisma.timeOff.delete({ where: { id } });
   revalidatePath('/staff', 'layout');
   revalidatePath('/agenda', 'layout');
+}
+
+
+export async function settleCommissions(from: string, to: string): Promise<StaffState> {
+  const denied = await guard();
+  if (denied) return denied;
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) {
+    return { error: 'invalidDate' };
+  }
+
+  const start = localToUtc(from, 0);
+  const end = localToUtc(to, 24 * 60);
+  if (end <= start) return { error: 'endBeforeStart' };
+
+  const user = await getSessionUser();
+  const paidAt = new Date();
+
+  const settled = await prisma.commission.updateMany({
+    where: { paidAt: null, createdAt: { gte: start, lt: end } },
+    data: { paidAt },
+  });
+
+  // Un règlement de commissions est un mouvement d'argent : il est tracé.
+  await prisma.auditLog.create({
+    data: {
+      userId: user?.id ?? null,
+      action: 'COMMISSIONS_SETTLE',
+      entity: 'Commission',
+      after: { from, to, count: settled.count },
+    },
+  });
+
+  revalidatePath('/staff', 'layout');
+  return { ok: true };
 }

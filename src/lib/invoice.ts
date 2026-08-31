@@ -3,6 +3,8 @@ import { computeItbisCents } from '@/lib/money';
 export type DraftLine = {
   description: string;
   serviceId?: string | null;
+  productId?: string | null;
+  packageId?: string | null;
   employeeId?: string | null;
   quantity: number;
   unitPriceCents: number;

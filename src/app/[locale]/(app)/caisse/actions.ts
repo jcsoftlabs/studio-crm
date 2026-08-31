@@ -9,6 +9,7 @@ import {
   NcfType,
   PaymentMethod,
   Role,
+  StockMovementType,
 } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { ForbiddenError, getSessionUser, requireRole } from '@/lib/permissions';
@@ -17,6 +18,7 @@ import { parseMoneyToCents } from '@/lib/money';
 import { computeTotals, type DraftLine } from '@/lib/invoice';
 import { expectedCashCents } from '@/lib/cash';
 import { allocateNcf, NcfError } from '@/lib/ncf';
+import { computeCommission } from '@/lib/commissions';
 import { echoForm, type FormEcho } from '@/lib/form-echo';
 
 export type CashState = { ok?: boolean; error?: string; echo?: FormEcho };
@@ -156,6 +158,8 @@ export async function closeCashSession(prev: CashState, formData: FormData): Pro
 const lineSchema = z.object({
   description: z.string().trim().min(1).max(200),
   serviceId: z.string().nullable(),
+  productId: z.string().nullable(),
+  packageId: z.string().nullable(),
   employeeId: z.string().nullable(),
   quantity: z.number().int().min(1).max(99),
   unitPriceCents: z.number().int().min(0),
@@ -202,6 +206,89 @@ export async function issueInvoice(input: {
   const giftCardPayments = parsedPayments.data.filter(
     (payment) => payment.method === PaymentMethod.GIFT_CARD,
   );
+
+  const lineTotalOf = (line: (typeof parsedLines.data)[number]) =>
+    Math.max(0, line.quantity * line.unitPriceCents - line.discountCents);
+
+  // Tout est relu avant la transaction : chaque aller-retour vers une base
+  // distante compte contre son délai d'expiration.
+  const idsOf = (key: 'employeeId' | 'serviceId' | 'productId' | 'packageId') =>
+    [...new Set(parsedLines.data.map((line) => line[key]).filter(Boolean))] as string[];
+
+  const [employees, products] = await Promise.all([
+    idsOf('employeeId').length
+      ? prisma.employee.findMany({ where: { id: { in: idsOf('employeeId') } } })
+      : Promise.resolve([]),
+    idsOf('productId').length
+      ? prisma.product.findMany({ where: { id: { in: idsOf('productId') } } })
+      : Promise.resolve([]),
+  ]);
+
+  // Le stock est vérifié avant d'émettre : on ne vend pas ce qu'on n'a pas.
+  const soldQty = new Map<string, number>();
+  for (const line of parsedLines.data) {
+    if (!line.productId) continue;
+    soldQty.set(line.productId, (soldQty.get(line.productId) ?? 0) + line.quantity);
+  }
+  for (const [productId, qty] of soldQty) {
+    const product = products.find((entry) => entry.id === productId);
+    if (!product || !product.forResale) return { error: 'productNotForResale' };
+    if (product.stockQty < qty) return { error: 'outOfStock' };
+  }
+
+  // Un règlement par forfait consomme une séance : il faut un forfait valide.
+  const packagePayment = parsedPayments.data.find(
+    (payment) => payment.method === PaymentMethod.PACKAGE,
+  );
+  let redeemedPackageId: string | null = null;
+  if (packagePayment) {
+    if (!input.clientId) return { error: 'packageNeedsClient' };
+    const usable = await prisma.clientPackage.findFirst({
+      where: { clientId: input.clientId, expiresAt: { gt: new Date() } },
+      include: { package: { select: { sessionsTotal: true } } },
+      orderBy: { expiresAt: 'asc' },
+    });
+    if (!usable || usable.sessionsUsed >= usable.package.sessionsTotal) {
+      return { error: 'noUsablePackage' };
+    }
+    redeemedPackageId = usable.id;
+  }
+
+  // Commissions : cascade taux du service → taux de l'employée → Paramètres.
+  const serviceRates = new Map(
+    (await prisma.service.findMany({
+      where: { id: { in: idsOf('serviceId') } },
+      select: { id: true, commissionRateBp: true },
+    })).map((service) => [service.id, service.commissionRateBp]),
+  );
+
+  const commissionRows = parsedLines.data
+    .map((line) => {
+      const employee = employees.find((entry) => entry.id === line.employeeId);
+      if (!employee) return null;
+      const baseCents = lineTotalOf(line);
+      const computed = computeCommission({
+        employeeId: employee.id,
+        salaryType: employee.salaryType,
+        serviceRateBp: line.serviceId ? (serviceRates.get(line.serviceId) ?? null) : null,
+        employeeRateBp: employee.commissionRateBp,
+        defaultRateBp: settings.defaultCommissionRateBp,
+        baseCents,
+      });
+      return computed ? { ...computed, baseCents } : null;
+    })
+    .filter(Boolean) as {
+    employeeId: string;
+    rateBp: number;
+    amountCents: number;
+    baseCents: number;
+  }[];
+
+  // Forfaits vendus : une fiche par ligne, datée depuis la validité du forfait.
+  const soldPackages = await prisma.package.findMany({
+    where: { id: { in: idsOf('packageId') } },
+    select: { id: true, validityDays: true },
+  });
 
   const user = await getSessionUser();
   const client = input.clientId
@@ -259,6 +346,8 @@ export async function issueInvoice(input: {
               create: parsedLines.data.map((line, index) => ({
                 description: line.description,
                 serviceId: line.serviceId,
+                productId: line.productId,
+                packageId: line.packageId,
                 employeeId: line.employeeId,
                 quantity: line.quantity,
                 unitPriceCents: line.unitPriceCents,
@@ -277,11 +366,52 @@ export async function issueInvoice(input: {
                   amountCents: payment.amountCents,
                   reference: payment.reference || null,
                   giftCardId: card?.id ?? null,
+                  clientPackageId:
+                    payment.method === PaymentMethod.PACKAGE ? redeemedPackageId : null,
                 };
               }),
             },
+            commissions: { create: commissionRows },
+            stockMovements: {
+              create: [...soldQty.entries()].map(([productId, qty]) => ({
+                productId,
+                type: StockMovementType.SALE,
+                qty: -qty,
+                createdBy: user?.id ?? null,
+              })),
+            },
+            clientPackages: {
+              create: parsedLines.data
+                .filter((line) => line.packageId && client)
+                .flatMap((line) => {
+                  const pack = soldPackages.find((entry) => entry.id === line.packageId);
+                  if (!pack || !client) return [];
+                  const expiresAt = new Date();
+                  expiresAt.setDate(expiresAt.getDate() + pack.validityDays);
+                  // Une fiche par exemplaire vendu, chacune avec son compteur.
+                  return Array.from({ length: line.quantity }, () => ({
+                    clientId: client.id,
+                    packageId: pack.id,
+                    expiresAt,
+                  }));
+                }),
+            },
           },
         });
+
+        for (const [productId, qty] of soldQty) {
+          await tx.product.update({
+            where: { id: productId },
+            data: { stockQty: { decrement: qty } },
+          });
+        }
+
+        if (redeemedPackageId) {
+          await tx.clientPackage.update({
+            where: { id: redeemedPackageId },
+            data: { sessionsUsed: { increment: 1 } },
+          });
+        }
 
         for (const [, card] of giftCards) {
           const used = parsedPayments.data
@@ -358,6 +488,43 @@ export async function voidInvoice(id: string, reason: string): Promise<InvoiceSt
       });
     }
 
+    // Une séance de forfait consommée est rendue.
+    const packagePayments = await tx.payment.findMany({
+      where: { invoiceId: id, method: PaymentMethod.PACKAGE, clientPackageId: { not: null } },
+    });
+    for (const payment of packagePayments) {
+      await tx.clientPackage.update({
+        where: { id: payment.clientPackageId! },
+        data: { sessionsUsed: { decrement: 1 } },
+      });
+    }
+
+    // Les produits vendus retournent en stock, par un mouvement compensatoire :
+    // l'historique conserve la vente et son annulation.
+    const sales = await tx.stockMovement.findMany({
+      where: { invoiceId: id, type: StockMovementType.SALE },
+    });
+    for (const sale of sales) {
+      await tx.stockMovement.create({
+        data: {
+          productId: sale.productId,
+          type: StockMovementType.ADJUSTMENT,
+          qty: -sale.qty,
+          reason: trimmed,
+          invoiceId: id,
+          createdBy: userId,
+        },
+      });
+      await tx.product.update({
+        where: { id: sale.productId },
+        data: { stockQty: { increment: -sale.qty } },
+      });
+    }
+
+    // Une facture annulée ne rémunère personne, et le forfait vendu est repris.
+    await tx.commission.deleteMany({ where: { invoiceId: id } });
+    await tx.clientPackage.deleteMany({ where: { invoiceId: id, sessionsUsed: 0 } });
+
     await tx.auditLog.create({
       data: {
         userId,
@@ -368,7 +535,7 @@ export async function voidInvoice(id: string, reason: string): Promise<InvoiceSt
         after: { status: after.status, voidReason: trimmed },
       },
     });
-  });
+  }, { timeout: 20_000, maxWait: 10_000 });
 
   revalidatePath('/caisse', 'layout');
   return { ok: true };
