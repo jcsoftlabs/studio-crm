@@ -83,6 +83,23 @@ export function SaleDialog({
   const balance = totals.totalCents - paid;
   const money = (cents: number) => formatMoney(cents, locale, currencySymbol);
 
+  function addGiftCard() {
+    setLines((prev) => [
+      ...prev,
+      {
+        description: t('giftCardLine'),
+        serviceId: null,
+        productId: null,
+        packageId: null,
+        giftCardSale: true,
+        employeeId: null,
+        quantity: 1,
+        unitPriceCents: 0,
+        discountCents: 0,
+      },
+    ]);
+  }
+
   function addLine(
     kind: 'service' | 'product' | 'package',
     id: string,
@@ -102,6 +119,7 @@ export function SaleDialog({
         serviceId: kind === 'service' ? id : null,
         productId: kind === 'product' ? id : null,
         packageId: kind === 'package' ? id : null,
+        giftCardSale: false,
         employeeId: null,
         quantity: 1,
         unitPriceCents: source.priceCents,
@@ -126,6 +144,7 @@ export function SaleDialog({
           serviceId: line.serviceId ?? null,
           productId: line.productId ?? null,
           packageId: line.packageId ?? null,
+          giftCardSale: line.giftCardSale ?? false,
           employeeId: line.employeeId ?? null,
         })),
         payments: payments
@@ -278,6 +297,11 @@ export function SaleDialog({
                 ))}
               </Select>
             </div>
+
+            <Button variant="outline" size="sm" className="self-start" onClick={addGiftCard}>
+              <Plus className="size-4" aria-hidden />
+              {t('addGiftCard')}
+            </Button>
 
             {lines.length === 0 ? (
               <p className="text-sm text-muted-foreground">{te('linesRequired')}</p>

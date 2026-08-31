@@ -5,6 +5,7 @@ export type DraftLine = {
   serviceId?: string | null;
   productId?: string | null;
   packageId?: string | null;
+  giftCardSale?: boolean;
   employeeId?: string | null;
   quantity: number;
   unitPriceCents: number;

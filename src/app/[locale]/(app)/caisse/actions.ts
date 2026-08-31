@@ -19,6 +19,7 @@ import { computeTotals, type DraftLine } from '@/lib/invoice';
 import { expectedCashCents } from '@/lib/cash';
 import { allocateNcf, NcfError } from '@/lib/ncf';
 import { computeCommission } from '@/lib/commissions';
+import { accrual } from '@/lib/loyalty';
 import { echoForm, type FormEcho } from '@/lib/form-echo';
 
 export type CashState = { ok?: boolean; error?: string; echo?: FormEcho };
@@ -160,6 +161,8 @@ const lineSchema = z.object({
   serviceId: z.string().nullable(),
   productId: z.string().nullable(),
   packageId: z.string().nullable(),
+  /// Vente d'un bon cadeau : le bon est créé à l'émission, pour ce montant.
+  giftCardSale: z.boolean().default(false),
   employeeId: z.string().nullable(),
   quantity: z.number().int().min(1).max(99),
   unitPriceCents: z.number().int().min(0),
@@ -290,6 +293,19 @@ export async function issueInvoice(input: {
     select: { id: true, validityDays: true },
   });
 
+  // Bons cadeaux vendus : un code par ligne, crédité du montant encaissé.
+  const giftCardSales = parsedLines.data
+    .map((line, index) => ({ line, index }))
+    .filter(({ line }) => line.giftCardSale)
+    .map(({ line, index }) => ({
+      index,
+      code: `BC-${Date.now().toString(36).toUpperCase()}-${index}`,
+      amountCents: lineTotalOf(line),
+      clientId: input.clientId,
+    }));
+
+  const loyalty = accrual(totals.subtotalCents, settings.loyaltyPointsPer100Cents);
+
   const user = await getSessionUser();
   const client = input.clientId
     ? await prisma.client.findUnique({ where: { id: input.clientId }, select: { id: true } })
@@ -413,6 +429,33 @@ export async function issueInvoice(input: {
           });
         }
 
+        for (const sale of giftCardSales) {
+          const card = await tx.giftCard.create({
+            data: {
+              code: sale.code,
+              clientId: sale.clientId,
+              amountCents: sale.amountCents,
+              balanceCents: sale.amountCents,
+            },
+          });
+          await tx.invoiceLine.updateMany({
+            where: { invoiceId: created.id, order: sale.index },
+            data: { giftCardId: card.id },
+          });
+        }
+
+        // Fidélité : une visite par facture, des points selon le réglage.
+        if (client) {
+          await tx.loyaltyAccount.upsert({
+            where: { clientId: client.id },
+            update: {
+              points: { increment: loyalty.points },
+              visits: { increment: loyalty.visits },
+            },
+            create: { clientId: client.id, points: loyalty.points, visits: loyalty.visits },
+          });
+        }
+
         for (const [, card] of giftCards) {
           const used = parsedPayments.data
             .filter((payment) => payment.method === PaymentMethod.GIFT_CARD)
@@ -469,6 +512,8 @@ export async function voidInvoice(id: string, reason: string): Promise<InvoiceSt
   if (!invoice) return { error: 'notFound' };
   if (invoice.status === InvoiceStatus.VOIDED) return { error: 'alreadyVoided' };
 
+  const settings = await getStudioSettings();
+
   await prisma.$transaction(async (tx) => {
     // Une facture émise n'est jamais modifiée ni supprimée : on l'annule et le
     // NCF est consommé, pas recyclé (§4).
@@ -524,6 +569,31 @@ export async function voidInvoice(id: string, reason: string): Promise<InvoiceSt
     // Une facture annulée ne rémunère personne, et le forfait vendu est repris.
     await tx.commission.deleteMany({ where: { invoiceId: id } });
     await tx.clientPackage.deleteMany({ where: { invoiceId: id, sessionsUsed: 0 } });
+
+    // Un bon cadeau vendu sur une facture annulée est désactivé, jamais supprimé :
+    // il a pu être remis à la cliente, la trace doit rester.
+    const soldCards = await tx.invoiceLine.findMany({
+      where: { invoiceId: id, giftCardId: { not: null } },
+      select: { giftCardId: true },
+    });
+    for (const line of soldCards) {
+      await tx.giftCard.update({ where: { id: line.giftCardId! }, data: { active: false } });
+    }
+
+    // Les points et la visite créditées sont retirés.
+    if (invoice.clientId) {
+      const account = await tx.loyaltyAccount.findUnique({ where: { clientId: invoice.clientId } });
+      if (account) {
+        const credited = accrual(invoice.subtotalCents, settings.loyaltyPointsPer100Cents);
+        await tx.loyaltyAccount.update({
+          where: { clientId: invoice.clientId },
+          data: {
+            points: Math.max(0, account.points - credited.points),
+            visits: Math.max(0, account.visits - credited.visits),
+          },
+        });
+      }
+    }
 
     await tx.auditLog.create({
       data: {

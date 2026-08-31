@@ -76,6 +76,11 @@ model StudioSettings {
   /// dès que l'enregistrement est finalisé.
   allowSalesWithoutNcf Boolean @default(true)
 
+  /// Points gagnés pour 100 centavos dépensés. 0 = fidélité désactivée.
+  loyaltyPointsPer100Cents Int @default(0)
+  /// Une cliente sans visite depuis ce délai entre dans le segment « inactives ».
+  inactiveAfterDays        Int @default(60)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -147,6 +152,7 @@ model Client {
   invoices     Invoice[]
   packages     ClientPackage[]
   giftCards    GiftCard[]
+  loyalty      LoyaltyAccount?
 
   @@index([searchName])
   @@index([phoneDigits])
@@ -471,6 +477,9 @@ model InvoiceLine {
   productId String?
   package   Package? @relation(fields: [packageId], references: [id])
   packageId String?
+  /// Bon cadeau vendu sur cette ligne, créé à l'émission de la facture.
+  giftCard   GiftCard? @relation("GiftCardSale", fields: [giftCardId], references: [id])
+  giftCardId String?
   employee  Employee? @relation(fields: [employeeId], references: [id])
   employeeId String?
 
@@ -571,6 +580,20 @@ model GiftCard {
 
   createdAt DateTime @default(now())
   payments  Payment[]
+  /// Ligne de facture qui a vendu ce bon.
+  saleLines InvoiceLine[] @relation("GiftCardSale")
+}
+
+/// Un compte par cliente, créé à la première facture.
+model LoyaltyAccount {
+  id       String @id @default(cuid())
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId String @unique
+
+  points Int @default(0)
+  visits Int @default(0)
+
+  updatedAt DateTime @updatedAt
 }
 
 

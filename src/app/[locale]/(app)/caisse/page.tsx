@@ -119,6 +119,7 @@ export default async function CaissePage({ params }: { params: Promise<{ locale:
       serviceId: item.serviceId,
       productId: null,
       packageId: null,
+      giftCardSale: false,
       employeeId: item.employeeId,
       quantity: 1,
       unitPriceCents: item.priceCents,

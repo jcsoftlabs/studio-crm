@@ -127,14 +127,17 @@
       "timezone": "Zona horaria",
       "openMinute": "Apertura",
       "closeMinute": "Cierre",
-      "allowSalesWithoutNcf": "Permitir cobros sin NCF"
+      "allowSalesWithoutNcf": "Permitir cobros sin NCF",
+      "loyaltyPoints": "Puntos por cada RD$ 1",
+      "inactiveAfterDays": "Inactiva después de (días)"
     },
     "hints": {
       "rnc": "Necesario para emitir facturas con NCF válidos.",
       "itbisRate": "18 % en República Dominicana.",
       "printerWidthMm": "80 mm para la impresora térmica del mostrador.",
       "usdRate": "No se convierte nada automáticamente; solo se muestra.",
-      "allowSalesWithoutNcf": "Mientras el registro ante la DGII está en curso. Desactívalo al recibir las secuencias."
+      "allowSalesWithoutNcf": "Mientras el registro ante la DGII está en curso. Desactívalo al recibir las secuencias.",
+      "loyaltyPoints": "0 desactiva el programa de puntos."
     }
   },
   "clients": {
@@ -399,7 +402,40 @@
     }
   },
   "fidelite": {
-    "title": "Fidelidad"
+    "title": "Fidelidad",
+    "subtitle": "Puntos, segmentos y campañas.",
+    "points": "Puntos",
+    "visits": "Visitas",
+    "disabled": "Programa de puntos desactivado en Ajustes.",
+    "segments": {
+      "inactive": "Clientas inactivas",
+      "birthdays": "Cumpleaños del mes",
+      "top": "Mejores clientas"
+    },
+    "segmentHint": {
+      "inactive": "Sin visita desde hace {days} días.",
+      "birthdays": "Cumplen años este mes.",
+      "top": "Por monto gastado."
+    },
+    "empty": "Ninguna clienta en este segmento.",
+    "count": "{count} clientas",
+    "lastVisit": "Última visita {date}",
+    "never": "Nunca",
+    "spent": "Gastado",
+    "campaign": "Campaña",
+    "campaignHint": "Sin la Cloud API de Meta el envío masivo no existe: cada mensaje se abre en WhatsApp y se envía a mano.",
+    "message": "Mensaje",
+    "send": "Abrir WhatsApp",
+    "sent": "Enviado",
+    "noPhone": "Sin teléfono",
+    "templates": {
+      "inactive": "Hola {client}, hace tiempo que no la vemos en {studio}. ¡Nos encantaría recibirla de nuevo!",
+      "birthdays": "¡Feliz cumpleaños {client}! En {studio} le deseamos un lindo día.",
+      "top": "Hola {client}, gracias por su confianza en {studio}. Tenemos algo especial para usted."
+    },
+    "giftCards": "Bonos regalo",
+    "noGiftCards": "Ningún bono emitido.",
+    "balance": "Saldo"
   },
   "rapports": {
     "title": "Informes",
@@ -512,7 +548,9 @@
     "issuedReceipt": "Recibo N° {number} emitido, sin valor fiscal.",
     "shareTextReceipt": "Hola {client}, aquí está su recibo de {studio}. N° {number}. Total {total}. ¡Gracias!",
     "addProduct": "Añadir un producto",
-    "addPackage": "Vender un paquete"
+    "addPackage": "Vender un paquete",
+    "addGiftCard": "Vender un bono regalo",
+    "giftCardLine": "Bono regalo"
   },
   "ncf": {
     "title": "Secuencias NCF",

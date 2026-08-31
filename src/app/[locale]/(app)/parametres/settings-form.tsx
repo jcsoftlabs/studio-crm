@@ -231,6 +231,19 @@ export function SettingsForm({ settings }: { settings: StudioSettingsWithHours }
             </select>
           </div>
           <Field name="timezone" label={f('timezone')} defaultValue={dv('timezone', settings.timezone)} />
+          <Field
+            name="loyaltyPoints"
+            label={f('loyaltyPoints')}
+            inputMode="numeric"
+            defaultValue={dv('loyaltyPoints', String(settings.loyaltyPointsPer100Cents))}
+            hint={t('hints.loyaltyPoints')}
+          />
+          <Field
+            name="inactiveAfterDays"
+            label={f('inactiveAfterDays')}
+            inputMode="numeric"
+            defaultValue={dv('inactiveAfterDays', String(settings.inactiveAfterDays))}
+          />
         </CardContent>
       </Card>
 

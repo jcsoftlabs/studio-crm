@@ -2,6 +2,7 @@ import { Role } from '@prisma/client';
 import {
   BarChart3,
   CalendarDays,
+  Heart,
   Home,
   Package,
   Settings,
@@ -20,6 +21,7 @@ export const NAV_ITEMS = [
   { key: 'caisse', href: '/caisse', icon: Wallet, roles: [Role.OWNER, Role.RECEPTION], primary: true },
   { key: 'services', href: '/services', icon: Scissors, roles: [Role.OWNER, Role.RECEPTION], primary: false },
   { key: 'stock', href: '/stock', icon: Package, roles: [Role.OWNER, Role.RECEPTION], primary: false },
+  { key: 'fidelite', href: '/fidelite', icon: Heart, roles: [Role.OWNER, Role.RECEPTION], primary: false },
   { key: 'staff', href: '/staff', icon: UserRound, roles: [Role.OWNER], primary: false },
   { key: 'rapports', href: '/rapports', icon: BarChart3, roles: [Role.OWNER], primary: false },
   { key: 'parametres', href: '/parametres', icon: Settings, roles: [Role.OWNER], primary: false },

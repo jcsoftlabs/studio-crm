@@ -127,14 +127,17 @@
       "timezone": "Fuseau horaire",
       "openMinute": "Ouverture",
       "closeMinute": "Fermeture",
-      "allowSalesWithoutNcf": "Autoriser les encaissements sans NCF"
+      "allowSalesWithoutNcf": "Autoriser les encaissements sans NCF",
+      "loyaltyPoints": "Points par RD$ 1",
+      "inactiveAfterDays": "Inactive après (jours)"
     },
     "hints": {
       "rnc": "Nécessaire pour émettre des factures avec des NCF valides.",
       "itbisRate": "18 % en République dominicaine.",
       "printerWidthMm": "80 mm pour l'imprimante thermique du comptoir.",
       "usdRate": "Rien n'est converti automatiquement, c'est un affichage.",
-      "allowSalesWithoutNcf": "Le temps que l'enregistrement DGII aboutisse. À désactiver dès réception des séquences."
+      "allowSalesWithoutNcf": "Le temps que l'enregistrement DGII aboutisse. À désactiver dès réception des séquences.",
+      "loyaltyPoints": "0 désactive le programme de points."
     }
   },
   "clients": {
@@ -399,7 +402,40 @@
     }
   },
   "fidelite": {
-    "title": "Fidélité"
+    "title": "Fidélité",
+    "subtitle": "Points, segments et campagnes.",
+    "points": "Points",
+    "visits": "Visites",
+    "disabled": "Programme de points désactivé dans Paramètres.",
+    "segments": {
+      "inactive": "Clientes inactives",
+      "birthdays": "Anniversaires du mois",
+      "top": "Meilleures clientes"
+    },
+    "segmentHint": {
+      "inactive": "Sans visite depuis {days} jours.",
+      "birthdays": "Fêtent leur anniversaire ce mois-ci.",
+      "top": "Par montant dépensé."
+    },
+    "empty": "Aucune cliente dans ce segment.",
+    "count": "{count} clientes",
+    "lastVisit": "Dernière visite {date}",
+    "never": "Jamais",
+    "spent": "Dépensé",
+    "campaign": "Campagne",
+    "campaignHint": "Sans la Cloud API de Meta, l'envoi en masse n'existe pas : chaque message s'ouvre dans WhatsApp et part à la main.",
+    "message": "Message",
+    "send": "Ouvrir WhatsApp",
+    "sent": "Envoyé",
+    "noPhone": "Sans téléphone",
+    "templates": {
+      "inactive": "Bonjour {client}, cela fait un moment qu'on ne vous a pas vue chez {studio}. Au plaisir de vous revoir !",
+      "birthdays": "Joyeux anniversaire {client} ! Toute l'équipe de {studio} vous souhaite une belle journée.",
+      "top": "Bonjour {client}, merci de votre fidélité chez {studio}. Nous avons quelque chose pour vous."
+    },
+    "giftCards": "Bons cadeaux",
+    "noGiftCards": "Aucun bon émis.",
+    "balance": "Solde"
   },
   "rapports": {
     "title": "Rapports",
@@ -512,7 +548,9 @@
     "issuedReceipt": "Reçu n° {number} émis, sans valeur fiscale.",
     "shareTextReceipt": "Bonjour {client}, voici votre reçu de {studio}. N° {number}. Total {total}. Merci !",
     "addProduct": "Ajouter un produit",
-    "addPackage": "Vendre un forfait"
+    "addPackage": "Vendre un forfait",
+    "addGiftCard": "Vendre un bon cadeau",
+    "giftCardLine": "Bon cadeau"
   },
   "ncf": {
     "title": "Séquences NCF",

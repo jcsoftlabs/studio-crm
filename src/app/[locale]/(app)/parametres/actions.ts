@@ -42,6 +42,8 @@ const schema = z.object({
   ncfLowThreshold: z.number().int().min(0).max(100000),
   ncfExpiryWarningDays: z.number().int().min(0).max(365),
   allowSalesWithoutNcf: z.boolean(),
+  loyaltyPointsPer100Cents: z.number().int().min(0).max(1000),
+  inactiveAfterDays: z.number().int().min(7).max(730),
   defaultLocale: z.nativeEnum(AppLocale),
   timezone: z.string().trim().min(1).max(64),
 });
@@ -92,6 +94,8 @@ export async function updateStudioSettings(
     ncfLowThreshold: intField(formData, 'ncfLowThreshold', 50),
     ncfExpiryWarningDays: intField(formData, 'ncfExpiryWarningDays', 30),
     allowSalesWithoutNcf: formData.get('allowSalesWithoutNcf') !== 'off',
+    loyaltyPointsPer100Cents: intField(formData, 'loyaltyPoints', 0),
+    inactiveAfterDays: intField(formData, 'inactiveAfterDays', 60),
     defaultLocale: formData.get('defaultLocale') ?? 'es',
     timezone: formData.get('timezone') ?? 'America/Santo_Domingo',
   });
