@@ -1,21 +1,26 @@
 'use client';
 
+import { useTransition } from 'react';
 import { Check } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { usePathname, useRouter } from '@/i18n/navigation';
+import { usePathname } from '@/i18n/navigation';
 import { locales, type Locale } from '@/i18n/routing';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { persistLocale } from '@/app/actions/locale';
 
 /**
- * Radix ferme le menu au clic : on garde le contrôle du select pour attendre
- * l'écriture du profil avant de naviguer, sinon la bascule est perdue.
+ * Le changement de langue force un rechargement complet.
+ *
+ * Une navigation douce laisserait le cache routeur de Next réutiliser le layout
+ * `[locale]` déjà rendu : l'URL et la base changent, mais l'écran reste dans
+ * l'ancienne langue. Un rechargement garantit que tous les composants serveur
+ * sont refaits avec les bons messages.
  */
 export function LocaleMenuItems() {
   const t = useTranslations('common');
   const current = useLocale() as Locale;
   const pathname = usePathname();
-  const router = useRouter();
+  const [pending, startTransition] = useTransition();
 
   const labels: Record<Locale, string> = { es: t('spanish'), fr: t('french') };
 
@@ -24,11 +29,15 @@ export function LocaleMenuItems() {
       {locales.map((locale) => (
         <DropdownMenuItem
           key={locale}
-          onSelect={async (event) => {
+          disabled={pending}
+          onSelect={(event) => {
             event.preventDefault();
             if (locale === current) return;
-            await persistLocale(locale);
-            router.replace(pathname, { locale });
+            startTransition(async () => {
+              await persistLocale(locale);
+              const search = typeof window === 'undefined' ? '' : window.location.search;
+              window.location.assign(`/${locale}${pathname === '/' ? '' : pathname}${search}`);
+            });
           }}
         >
           <Check className={locale === current ? 'size-4' : 'size-4 opacity-0'} aria-hidden />

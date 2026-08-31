@@ -27,7 +27,8 @@
       "staff": "Employées",
       "rapports": "Rapports",
       "parametres": "Paramètres",
-      "more": "Plus"
+      "more": "Plus",
+      "fidelite": "Fidélité"
     },
     "weekdays": {
       "0": "Dimanche",
@@ -86,10 +87,24 @@
   "dashboard": {
     "title": "Accueil",
     "welcome": "Bonjour, {name}",
-    "emptyState": "Le tableau de bord se remplira à partir de la phase 2 (agenda).",
     "setupTitle": "Configurez votre studio",
     "setupBody": "Renseignez le nom, le RNC, l'adresse et les horaires dans Paramètres.",
-    "setupCta": "Aller aux Paramètres"
+    "setupCta": "Aller aux Paramètres",
+    "today": "Aujourd'hui",
+    "todayAppointments": "Rendez-vous du jour",
+    "noAppointments": "Aucun rendez-vous aujourd'hui.",
+    "todayRevenue": "Encaissé aujourd'hui",
+    "pendingToday": "À encaisser",
+    "cashOpen": "Caisse ouverte",
+    "cashClosed": "Caisse fermée",
+    "alerts": "Points d'attention",
+    "noAlerts": "Rien à signaler.",
+    "alertLowStock": "{count} produit(s) sous le seuil",
+    "alertNcfLow": "Il reste peu de comprobantes NCF",
+    "alertNoNcf": "Aucune séquence NCF : les encaissements sortent en reçus sans valeur fiscale",
+    "alertReminders": "{count} relance(s) à envoyer pour demain",
+    "alertWaitlist": "{count} cliente(s) en liste d'attente",
+    "openAgenda": "Voir l'agenda"
   },
   "parametres": {
     "title": "Paramètres",

@@ -27,7 +27,8 @@
       "staff": "Empleadas",
       "rapports": "Informes",
       "parametres": "Ajustes",
-      "more": "Más"
+      "more": "Más",
+      "fidelite": "Fidelidad"
     },
     "weekdays": {
       "0": "Domingo",
@@ -86,10 +87,24 @@
   "dashboard": {
     "title": "Inicio",
     "welcome": "Hola, {name}",
-    "emptyState": "El panel se llenará a partir de la fase 2 (citas).",
     "setupTitle": "Configura tu studio",
     "setupBody": "Añade el nombre, el RNC, la dirección y los horarios en Ajustes.",
-    "setupCta": "Ir a Ajustes"
+    "setupCta": "Ir a Ajustes",
+    "today": "Hoy",
+    "todayAppointments": "Citas de hoy",
+    "noAppointments": "Ninguna cita hoy.",
+    "todayRevenue": "Cobrado hoy",
+    "pendingToday": "Por cobrar",
+    "cashOpen": "Caja abierta",
+    "cashClosed": "Caja cerrada",
+    "alerts": "Puntos de atención",
+    "noAlerts": "Nada que señalar.",
+    "alertLowStock": "{count} producto(s) bajo el mínimo",
+    "alertNcfLow": "Quedan pocos comprobantes NCF",
+    "alertNoNcf": "Ninguna secuencia NCF: se emiten recibos sin valor fiscal",
+    "alertReminders": "{count} recordatorio(s) por enviar para mañana",
+    "alertWaitlist": "{count} clienta(s) en lista de espera",
+    "openAgenda": "Ver la agenda"
   },
   "parametres": {
     "title": "Ajustes",
