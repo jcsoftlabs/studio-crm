@@ -4,6 +4,7 @@ import { AppSidebar } from '@/components/app-sidebar';
 import { BottomNav } from '@/components/bottom-nav';
 import { UserMenu } from '@/components/user-menu';
 import { OfflineBanner } from '@/components/offline-banner';
+import { DeveloperCredit } from '@/components/developer-credit';
 
 export default async function AppLayout({
   children,
@@ -28,7 +29,8 @@ export default async function AppLayout({
           <UserMenu name={user.name ?? ''} email={user.email ?? ''} />
         </header>
         <OfflineBanner />
-        <main className="flex-1 p-4 pb-24 md:p-6 md:pb-6">{children}</main>
+        <main className="flex-1 p-4 pb-4 md:p-6">{children}</main>
+        <DeveloperCredit className="px-4 pb-24 pt-2 md:pb-6 print:hidden" />
         <div className="print:hidden">
           <BottomNav role={user.role} />
         </div>

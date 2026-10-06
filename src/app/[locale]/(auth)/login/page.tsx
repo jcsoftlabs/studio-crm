@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LocaleSwitcher } from '@/components/locale-switcher';
 import { LoginForm } from './login-form';
+import { DeveloperCredit } from '@/components/developer-credit';
 
 export default async function LoginPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -20,6 +21,7 @@ export default async function LoginPage({ params }: { params: Promise<{ locale: 
         </CardContent>
       </Card>
       <LocaleSwitcher />
+      <DeveloperCredit />
     </main>
   );
 }

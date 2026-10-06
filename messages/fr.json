@@ -73,7 +73,8 @@
     "from": "Du",
     "to": "Au",
     "apply": "Appliquer",
-    "stockQty": "Stock"
+    "stockQty": "Stock",
+    "developedBy": "Développé par"
   },
   "auth": {
     "loginTitle": "Connexion",

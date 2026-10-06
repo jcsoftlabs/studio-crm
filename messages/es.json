@@ -73,7 +73,8 @@
     "from": "Desde",
     "to": "Hasta",
     "apply": "Aplicar",
-    "stockQty": "Existencias"
+    "stockQty": "Existencias",
+    "developedBy": "Desarrollado por"
   },
   "auth": {
     "loginTitle": "Iniciar sesión",
